@@ -9,21 +9,32 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
+	"github.com/casnerano/snippet-war/internal/service"
 )
 
 //go:embed templates/*
 var webFS embed.FS
 
 type Server struct {
-	httpServer *http.Server
-	router     *chi.Mux
+	httpServer      *http.Server
+	router          *chi.Mux
+	questionService *service.QuestionService
 }
 
-func New(addr string) *Server {
+func New(addr string, questionService *service.QuestionService) *Server {
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
+
+	// Создаем handler для вопросов
+	questionHandler := NewQuestionHandler(questionService, slog.Default())
+
+	// Регистрируем API routes
+	router.Route("/api", func(r chi.Router) {
+		r.Post("/questions/generate", questionHandler.GenerateQuestion)
+	})
 
 	subFS, _ := fs.Sub(webFS, "templates")
 
@@ -34,6 +45,7 @@ func New(addr string) *Server {
 			Addr:    addr,
 			Handler: router,
 		},
+		questionService: questionService,
 	}
 
 	return &server

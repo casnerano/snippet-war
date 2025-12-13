@@ -65,8 +65,35 @@ Snippet War - это соревновательная игра в формате
 git clone https://github.com/casnerano/snippet-war.git
 cd snippet-war
 
+# Настройка переменных окружения
+export PROXYAPI_API_KEY="your-api-key"
+export PROXYAPI_MODEL="gpt-4o-mini"
+
 # Запуск приложения
 go run cmd/snippet-war/main.go
+```
+
+## 🔧 Конфигурация
+
+Приложение использует переменные окружения для настройки. Обязательные переменные:
+
+- `PROXYAPI_API_KEY` - API ключ для ProxyAPI (обязательно)
+- `PROXYAPI_MODEL` - Модель LLM для использования (обязательно)
+
+Опциональные переменные:
+
+- `PROXYAPI_BASE_URL` - Базовый URL API (по умолчанию: `https://api.proxyapi.ru/openai/v1`)
+- `PROXYAPI_TIMEOUT` - Таймаут запросов (по умолчанию: `30s`)
+- `PROXYAPI_MAX_TOKENS` - Максимальное количество токенов (по умолчанию: `2000`)
+
+Пример файла `.env`:
+
+```env
+PROXYAPI_API_KEY=your-api-key-here
+PROXYAPI_MODEL=gpt-4o-mini
+PROXYAPI_BASE_URL=https://api.proxyapi.ru/openai/v1
+PROXYAPI_TIMEOUT=30s
+PROXYAPI_MAX_TOKENS=2000
 ```
 
 ## 📱 Telegram Mini-App
@@ -84,8 +111,16 @@ go run cmd/snippet-war/main.go
 snippet-war/
 ├── cmd/
 │   └── snippet-war/
-│       └── main.go
+│       └── main.go          # Точка входа приложения
+├── internal/
+│   ├── config/              # Конфигурация приложения
+│   ├── model/               # Модели данных
+│   ├── openrouter/          # Клиент OpenRouter API
+│   ├── proxyapi/            # Клиент ProxyAPI
+│   ├── server/              # HTTP сервер и handlers
+│   └── service/             # Бизнес-логика
 ├── go.mod
+├── go.sum
 └── README.md
 ```
 
