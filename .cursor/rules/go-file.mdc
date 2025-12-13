@@ -1,0 +1,321 @@
+---
+alwaysApply: true
+---
+
+# Правила разработки на Go для проекта Snippet War
+
+## Общие принципы
+
+1. **Следуйте официальному Style Guide Go**: https://go.dev/doc/effective_go
+2. **Используйте gofmt** для форматирования кода
+3. **Используйте golint/go vet** для проверки кода
+4. **Минимизируйте зависимости** - добавляйте только необходимые пакеты
+5. **Приоритет читаемости** - код должен быть понятным и самодокументированным
+
+## Структура проекта
+
+Проект разделен на два основных компонента: frontend и backend. Все Go-код находится в директории `backend/`.
+
+```
+snippet-war/
+├── frontend/               # Фронтенд приложения (Telegram Mini App)
+│   └── ...                # Код фронтенда
+├── backend/                # Бэкенд приложения (Go)
+│   ├── cmd/               # Точки входа приложения
+│   │   └── snippet-war/
+│   │       └── main.go
+│   ├── internal/          # Внутренние пакеты (не экспортируются)
+│   │   ├── handler/      # HTTP handlers
+│   │   ├── service/      # Бизнес-логика
+│   │   ├── repository/   # Работа с данными
+│   │   └── model/        # Модели данных
+│   ├── pkg/              # Публичные пакеты (если нужны)
+│   ├── api/              # API спецификации
+│   ├── config/           # Конфигурация
+│   ├── migrations/       # Миграции БД (если используется)
+│   ├── go.mod
+│   └── go.sum
+└── README.md
+```
+
+## Стиль кода
+
+### Именование
+
+- **Пакеты**: короткие, строчные, без подчеркиваний и смешанного регистра (`user`, `handler`, не `UserHandler`)
+- **Функции**: смешанный регистр, экспортируемые с заглавной буквы (`GetUser`, `validateInput`)
+- **Переменные**: краткие, но понятные (`userID`, не `uid` или `userIdentifier`)
+- **Константы**: `const MaxRetries = 3` или `const UserRoleAdmin = "admin"`
+- **Интерфейсы**: обычно с окончанием `-er` (`Reader`, `Writer`), но не всегда (`Service`)
+
+### Форматирование
+
+- Используйте табы для отступов (не пробелы)
+- Максимальная длина строки: 100-120 символов
+- Добавляйте пустые строки для логического разделения
+- Группируйте импорты: стандартная библиотека, сторонние, внутренние
+
+```go
+import (
+    "context"
+    "fmt"
+    "time"
+
+    "github.com/gin-gonic/gin"
+    "golang.org/x/sync/errgroup"
+
+    "github.com/casnerano/snippet-war/backend/internal/service"
+)
+```
+
+## Обработка ошибок
+
+1. **Всегда обрабатывайте ошибки** - не игнорируйте их
+2. **Используйте обёртки для добавления контекста**: `fmt.Errorf("failed to load user: %w", err)`
+3. **Не используйте panic** в production коде (только для критических ошибок при старте)
+4. **Возвращайте ошибки последним параметром**
+5. **Используйте проверяемые ошибки** (`errors.Is`, `errors.As`) вместо сравнения строк
+
+```go
+// ✅ Правильно
+func GetUser(id int) (*User, error) {
+    user, err := repo.FindByID(id)
+    if err != nil {
+        return nil, fmt.Errorf("get user %d: %w", id, err)
+    }
+    return user, nil
+}
+
+// ❌ Неправильно
+func GetUser(id int) (*User, error) {
+    user, _ := repo.FindByID(id) // игнорирование ошибки
+    return user, nil
+}
+```
+
+## Контексты
+
+1. **Всегда передавайте context.Context** в функции, которые делают I/O операции
+2. **Первым параметром** должен быть context
+3. **Используйте context для отмены и таймаутов**
+4. **Не храните context в структурах** - передавайте как параметр
+
+```go
+func (s *Service) GetUser(ctx context.Context, id int) (*User, error) {
+    ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+    defer cancel()
+    
+    return s.repo.FindByID(ctx, id)
+}
+```
+
+## Работа с горутинами
+
+1. **Всегда знайте, когда горутина завершится** - избегайте утечек
+2. **Используйте sync.WaitGroup** для ожидания завершения горутин
+3. **Используйте errgroup** для параллельного выполнения с обработкой ошибок
+4. **Используйте каналы для синхронизации** и передачи данных
+5. **Всегда закрывайте каналы**, когда они больше не нужны
+
+```go
+// ✅ Правильно
+func ProcessUsers(ctx context.Context, users []User) error {
+    g, ctx := errgroup.WithContext(ctx)
+    
+    for _, user := range users {
+        user := user // важно для замыкания
+        g.Go(func() error {
+            return processUser(ctx, user)
+        })
+    }
+    
+    return g.Wait()
+}
+```
+
+## Интерфейсы
+
+1. **Делайте интерфейсы маленькими** - лучше несколько маленьких, чем один большой
+2. **Интерфейсы определяйте в месте использования**, а не в месте реализации
+3. **Избегайте избыточных интерфейсов** - не создавайте интерфейсы для всего подряд
+
+```go
+// ✅ Правильно - интерфейс определен там, где используется
+type UserService interface {
+    GetUser(ctx context.Context, id int) (*User, error)
+}
+
+// ❌ Неправильно - интерфейс определен вместе с реализацией
+type User struct {}
+type UserService interface {
+    GetUser(ctx context.Context, id int) (*User, error)
+}
+```
+
+## Структуры
+
+1. **Используйте теги struct** для валидации и сериализации
+2. **Группируйте связанные поля** вместе
+3. **Экспортируйте поля только если нужно** - используйте `json:"field_name"` для сериализации
+4. **Избегайте вложенных структур** без необходимости
+
+```go
+type User struct {
+    ID        int       `json:"id" db:"id"`
+    Username  string    `json:"username" db:"username"`
+    Email     string    `json:"email" db:"email"`
+    CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+```
+
+## Тестирование
+
+1. **Пишите тесты для каждого пакета** - файлы `*_test.go`
+2. **Используйте table-driven tests** для множественных случаев
+3. **Используйте testify** для assertions (assert, require)
+4. **Используйте моки** для внешних зависимостей
+5. **Тесты должны быть быстрыми и изолированными**
+
+```go
+func TestGetUser(t *testing.T) {
+    tests := []struct {
+        name    string
+        id      int
+        want    *User
+        wantErr bool
+    }{
+        {
+            name:    "valid user",
+            id:      1,
+            want:    &User{ID: 1, Username: "test"},
+            wantErr: false,
+        },
+        {
+            name:    "not found",
+            id:      999,
+            want:    nil,
+            wantErr: true,
+        },
+    }
+    
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got, err := GetUser(tt.id)
+            if (err != nil) != tt.wantErr {
+                t.Errorf("GetUser() error = %v, wantErr %v", err, tt.wantErr)
+                return
+            }
+            // проверка результата
+        })
+    }
+}
+```
+
+## Работа с зависимостями
+
+1. **Используйте dependency injection** - передавайте зависимости через конструктор
+2. **Избегайте глобальных переменных** - передавайте зависимости явно
+3. **Используйте интерфейсы** для абстракции зависимостей
+
+```go
+type Service struct {
+    repo Repository
+    logger Logger
+}
+
+func NewService(repo Repository, logger Logger) *Service {
+    return &Service{
+        repo: repo,
+        logger: logger,
+    }
+}
+```
+
+## Логирование
+
+1. **Используйте структурированное логирование** (slog)
+2. **Логируйте на уровне INFO, DEBUG, ERROR, WARN**
+3. **Не логируйте чувствительные данные** (пароли, токены)
+4. **Добавляйте контекст к логам** (request ID, user ID)
+
+```go
+logger.WithFields(logrus.Fields{
+    "user_id": userID,
+    "action": "get_user",
+}).Info("User retrieved successfully")
+```
+
+## Безопасность
+
+1. **Валидируйте все пользовательские данные**
+2. **Используйте подготовленные запросы** для работы с БД
+3. **Не храните секреты в коде** - используйте переменные окружения
+4. **Используйте HTTPS** в production
+5. **Защищайтесь от SQL injection, XSS, CSRF**
+
+## Производительность
+
+1. **Избегайте преждевременной оптимизации**
+2. **Используйте профилирование** (pprof) для поиска узких мест
+3. **Используйте sync.Pool** для переиспользования объектов
+4. **Избегайте ненужных аллокаций** в горячих путях
+5. **Используйте буферизованные каналы** при необходимости
+
+## Документация
+
+1. **Пишите комментарии для экспортируемых функций и типов**
+2. **Используйте примеры** в godoc
+3. **Объясняйте "почему", а не "что"** в комментариях
+
+```go
+// GetUser retrieves a user by ID. Returns an error if the user
+// is not found or if the database query fails.
+func GetUser(ctx context.Context, id int) (*User, error) {
+    // ...
+}
+```
+
+## Работа с API
+
+1. **Используйте стандартные HTTP коды** (200, 400, 404, 500)
+2. **Возвращайте структурированные ошибки** в JSON
+3. **Используйте middleware** для общей логики (logging, auth, CORS)
+4. **Валидируйте запросы** перед обработкой
+
+## Особенности проекта (Telegram Mini App)
+
+1. **Используйте Telegram Bot API** для интеграции
+2. **Храните состояние пользователя** в сессиях или БД
+3. **Обрабатывайте webhook'и** для получения обновлений
+4. **Используйте Telegram Mini App SDK** для фронтенда
+5. **Валидируйте данные от Telegram** (initData)
+
+## Команды для проверки кода
+
+```bash
+# Форматирование
+go fmt ./...
+
+# Проверка кода
+go vet ./...
+
+# Линтер
+golangci-lint run
+
+# Тесты
+go test ./...
+
+# Тесты с покрытием
+go test -cover ./...
+
+# Сборка (из директории backend)
+cd backend
+go build ./cmd/snippet-war
+```
+
+## Полезные ресурсы
+
+- Effective Go: https://go.dev/doc/effective_go
+- Go Code Review Comments: https://github.com/golang/go/wiki/CodeReviewComments
+- Standard Package Layout: https://github.com/golang-standards/project-layout
+
