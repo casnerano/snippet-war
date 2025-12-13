@@ -13,17 +13,18 @@ import (
 	"github.com/casnerano/snippet-war/internal/server"
 )
 
-const defaultAddr = ":8086"
+const defaultAddr = ":8081"
 
-var addr = flag.String("addr", defaultAddr, "Server address")
+var addr string
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
+	flag.StringVar(&addr, "addr", defaultAddr, "Server address")
 	flag.Parse()
 
-	srv := server.New(*addr)
+	srv := server.New(addr)
 
 	if err := srv.Run(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("Server failed: %v", err)
