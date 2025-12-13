@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"embed"
+	"io/fs"
 	"log/slog"
 	"net/http"
 
@@ -24,7 +25,9 @@ func New(addr string) *Server {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
-	router.Handle("/", http.FileServer(http.FS(webFS)))
+	subFS, _ := fs.Sub(webFS, "templates")
+
+	router.Handle("/*", http.FileServer(http.FS(subFS)))
 
 	server := Server{
 		httpServer: &http.Server{
