@@ -7,4 +7,3 @@ build:
 .PHONY: run
 run:
 	go run ./cmd/snippet-war/main.go
-
