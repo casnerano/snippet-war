@@ -1,3 +1,2 @@
-bin/
-dist/
-.env
+/bin
+/.env
