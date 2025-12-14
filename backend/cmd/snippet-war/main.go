@@ -27,7 +27,7 @@ func main() {
 	// load from .env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Failed to load .env file: %v", err)
+		log.Printf("Failed to load .env file: %v", err)
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -43,7 +43,7 @@ func main() {
 	// Загрузка конфигурации
 	cfg, err := config.Load()
 	if err != nil {
-		log.Printf("Failed to load config: %v", err)
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	// Проверяем наличие конфигурации ProxyAPI
