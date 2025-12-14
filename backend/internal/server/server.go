@@ -2,8 +2,6 @@ package server
 
 import (
 	"context"
-	"embed"
-	"io/fs"
 	"log/slog"
 	"net/http"
 
@@ -12,9 +10,6 @@ import (
 
 	"github.com/casnerano/snippet-war/internal/service"
 )
-
-//go:embed templates/*
-var webFS embed.FS
 
 type Server struct {
 	httpServer      *http.Server
@@ -35,10 +30,6 @@ func New(addr string, questionService *service.QuestionService) *Server {
 	router.Route("/api", func(r chi.Router) {
 		r.Post("/questions/generate", questionHandler.GenerateQuestion)
 	})
-
-	subFS, _ := fs.Sub(webFS, "templates")
-
-	router.Handle("/*", http.FileServer(http.FS(subFS)))
 
 	server := Server{
 		httpServer: &http.Server{
