@@ -1,8 +1,11 @@
-name: Deploy
+name: Deploy backend
 
 on:
   push:
     branches: [ master ]
+    paths:
+      - "backend/**"
+      - ".github/workflows/**"
 
 env:
   IMAGE_NAME: snippet-war
