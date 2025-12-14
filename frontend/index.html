@@ -1,12 +1,557 @@
-<!DOCTYPE>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snippet War</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+        .slide-enter-active, .slide-leave-active {
+            transition: transform 0.3s ease;
+        }
+        .slide-enter-from {
+            transform: translateX(100%);
+        }
+        .slide-leave-to {
+            transform: translateX(-100%);
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .code-block {
+            background-color: #2d3748;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+    </style>
 </head>
-<body>
-    <h1>Hello, Telegram!</h1>
-    <p>This is your embedded Mini App.</p>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="app" class="max-w-md mx-auto min-h-screen bg-gray-900">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-4 shadow-lg">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-bold">Snippet War</h1>
+                <div v-if="gameState === 'playing'" class="flex items-center space-x-2">
+                    <i class="fas fa-trophy text-yellow-400"></i>
+                    <span class="font-bold">{{ score }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Screen -->
+        <div v-if="gameState === 'welcome'" class="p-4">
+            <div class="text-center py-8">
+                <div class="text-6xl mb-4">⚔️</div>
+                <h2 class="text-2xl font-bold mb-2">Добро пожаловать!</h2>
+                <p class="text-gray-400 mb-8">Проверь свои знания программирования</p>
+
+                <button @click="gameState = 'setup'" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 w-full">
+                    Начать игру
+                </button>
+            </div>
+        </div>
+
+        <!-- Setup Screen -->
+        <div v-else-if="gameState === 'setup'" class="p-4">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold mb-4">Настройки игры</h2>
+
+                <!-- Language Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Язык программирования</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button
+                            v-for="lang in languages"
+                            :key="lang.value"
+                            @click="selectedLanguage = lang.value"
+                            :class="[
+                                'p-3 rounded-lg border transition duration-200',
+                                selectedLanguage === lang.value
+                                    ? 'bg-purple-600 border-purple-500 text-white'
+                                    : 'bg-gray-800 border-gray-700 text-gray-300'
+                            ]"
+                        >
+                            {{ lang.name }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Topic Selection -->
+                <div class="mb-6" v-if="selectedLanguage">
+                    <label class="block text-sm font-medium mb-2">Тема</label>
+                    <div class="space-y-2 max-h-40 overflow-y-auto">
+                        <button
+                            v-for="topic in getTopicsForLanguage(selectedLanguage)"
+                            :key="topic.ID"
+                            @click="selectedTopic = topic.ID"
+                            :class="[
+                                'w-full text-left p-3 rounded-lg border transition duration-200',
+                                selectedTopic === topic.ID
+                                    ? 'bg-purple-600 border-purple-500 text-white'
+                                    : 'bg-gray-800 border-gray-700 text-gray-300'
+                            ]"
+                        >
+                            {{ topic.Name }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Difficulty Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Сложность</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button
+                            v-for="diff in difficulties"
+                            :key="diff.value"
+                            @click="selectedDifficulty = diff.value"
+                            :class="[
+                                'p-3 rounded-lg border transition duration-200',
+                                selectedDifficulty === diff.value
+                                    ? 'bg-purple-600 border-purple-500 text-white'
+                                    : 'bg-gray-800 border-gray-700 text-gray-300'
+                            ]"
+                        >
+                            {{ diff.name }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button
+                @click="startGame"
+                :disabled="!selectedLanguage || !selectedTopic || !selectedDifficulty"
+                :class="[
+                    'w-full py-3 px-6 rounded-full font-bold shadow-lg transition duration-300',
+                    selectedLanguage && selectedTopic && selectedDifficulty
+                        ? 'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white'
+                        : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                ]"
+            >
+                Начать игру
+            </button>
+        </div>
+
+        <!-- Game Screen -->
+        <div v-else-if="gameState === 'playing'" class="p-4">
+            <div v-if="currentQuestion">
+                <!-- Progress -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm text-gray-400 mb-1">
+                        <span>Вопрос {{ questionCount }}</span>
+                        <span>{{ timeLeft }} сек</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-2">
+                        <div
+                            class="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                            :style="{ width: `${(timeLeft / 30) * 100}%` }"
+                        ></div>
+                    </div>
+                </div>
+
+                <!-- Question -->
+                <div class="bg-gray-800 rounded-xl p-4 mb-4 shadow-lg">
+                    <h3 class="text-lg font-semibold mb-3">{{ currentQuestion.question }}</h3>
+
+                    <!-- Code Block -->
+                    <div class="code-block mb-4">
+                        <pre class="text-green-400 text-sm">{{ currentQuestion.code }}</pre>
+                    </div>
+
+                    <!-- Answer Options -->
+                    <div v-if="currentQuestion.question_type === 'multiple_choice'">
+                        <div
+                            v-for="(option, index) in currentQuestion.options"
+                            :key="index"
+                            @click="selectAnswer(option)"
+                            :class="[
+                                'p-3 mb-2 rounded-lg border cursor-pointer transition duration-200',
+                                selectedAnswer === option
+                                    ? 'bg-purple-600 border-purple-500'
+                                    : 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                            ]"
+                        >
+                            {{ option }}
+                        </div>
+                    </div>
+
+                    <!-- Free Text Input -->
+                    <div v-else>
+                        <input
+                            v-model="freeTextAnswer"
+                            type="text"
+                            placeholder="Введите ваш ответ..."
+                            class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            @keyup.enter="submitFreeTextAnswer"
+                        >
+                    </div>
+
+                    <!-- Submit Button for Free Text -->
+                    <button
+                        v-if="currentQuestion.question_type === 'free_text'"
+                        @click="submitFreeTextAnswer"
+                        :disabled="!freeTextAnswer.trim()"
+                        :class="[
+                            'w-full mt-3 py-2 rounded-lg font-medium transition duration-200',
+                            freeTextAnswer.trim()
+                                ? 'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white'
+                                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                        ]"
+                    >
+                        Ответить
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div v-else class="flex justify-center items-center h-64">
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                    <p>Загрузка вопроса...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div v-else-if="gameState === 'result'" class="p-4">
+            <div class="text-center py-8">
+                <div class="text-6xl mb-4" v-if="isCorrect">🎉</div>
+                <div class="text-6xl mb-4" v-else>❌</div>
+
+                <h2 class="text-2xl font-bold mb-2" v-if="isCorrect">Правильно!</h2>
+                <h2 class="text-2xl font-bold mb-2" v-else>Неправильно</h2>
+
+                <div class="bg-gray-800 rounded-xl p-4 mb-6">
+                    <p class="mb-3">{{ currentQuestion.explanation }}</p>
+                    <div class="text-sm text-gray-400">
+                        Правильный ответ: <span class="text-green-400 font-mono">{{ currentQuestion.correct_answer }}</span>
+                    </div>
+                </div>
+
+                <button
+                    @click="loadNextQuestion"
+                    class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 w-full"
+                >
+                    Следующий вопрос
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 text-center text-gray-500 text-sm">
+            <p>Snippet War - проверь свои знания программирования</p>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    gameState: 'welcome', // welcome, setup, playing, result
+                    score: 0,
+                    questionCount: 1,
+                    timeLeft: 30,
+                    timer: null,
+
+                    // Setup data
+                    selectedLanguage: '',
+                    selectedTopic: '',
+                    selectedDifficulty: '',
+
+                    // Question data
+                    currentQuestion: null,
+                    selectedAnswer: '',
+                    freeTextAnswer: '',
+                    isCorrect: false,
+
+                    // Static data
+                    languages: [
+                        { value: 'python', name: 'Python' },
+                        { value: 'javascript', name: 'JavaScript' },
+                        { value: 'go', name: 'Go' },
+                        { value: 'java', name: 'Java' },
+                        { value: 'cpp', name: 'C++' },
+                        { value: 'rust', name: 'Rust' },
+                        { value: 'typescript', name: 'TypeScript' }
+                    ],
+
+                    difficulties: [
+                        { value: 'beginner', name: 'Новичок' },
+                        { value: 'intermediate', name: 'Средний' },
+                        { value: 'advanced', name: 'Эксперт' }
+                    ],
+
+                    topics: {
+                        python: [
+                            { ID: "variables_types", Name: "Переменные и типы данных" },
+                            { ID: "lists_arrays", Name: "Списки и массивы" },
+                            { ID: "dictionaries", Name: "Словари" },
+                            { ID: "functions", Name: "Функции" },
+                            { ID: "closures", Name: "Замыкания" },
+                            { ID: "decorators", Name: "Декораторы" },
+                            { ID: "generators", Name: "Генераторы" },
+                            { ID: "classes_oop", Name: "Классы и ООП" },
+                            { ID: "exceptions", Name: "Обработка исключений" },
+                            { ID: "context_managers", Name: "Контекстные менеджеры" },
+                            { ID: "async_await", Name: "Асинхронное программирование" }
+                        ],
+                        javascript: [
+                            { ID: "variables_types", Name: "Переменные и типы" },
+                            { ID: "arrays", Name: "Массивы" },
+                            { ID: "objects", Name: "Объекты" },
+                            { ID: "functions", Name: "Функции" },
+                            { ID: "closures", Name: "Замыкания" },
+                            { ID: "this_binding", Name: "Контекст выполнения (this)" },
+                            { ID: "prototypes", Name: "Прототипы" },
+                            { ID: "classes", Name: "Классы (ES6+)" },
+                            { ID: "promises_async", Name: "Промисы и async/await" },
+                            { ID: "event_loop", Name: "Event Loop" },
+                            { ID: "destructuring", Name: "Деструктуризация" },
+                            { ID: "modules", Name: "Модули (ES6+)" }
+                        ],
+                        go: [
+                            { ID: "variables_types", Name: "Переменные и типы" },
+                            { ID: "slices", Name: "Срезы" },
+                            { ID: "maps", Name: "Мапы" },
+                            { ID: "functions", Name: "Функции" },
+                            { ID: "methods", Name: "Методы" },
+                            { ID: "interfaces", Name: "Интерфейсы" },
+                            { ID: "goroutines", Name: "Горутины" },
+                            { ID: "channels", Name: "Каналы" },
+                            { ID: "select", Name: "Select statement" },
+                            { ID: "defer_panic_recover", Name: "Defer, panic, recover" },
+                            { ID: "pointers", Name: "Указатели" },
+                            { ID: "structs", Name: "Структуры" }
+                        ],
+                        java: [
+                            { ID: "variables_types", Name: "Переменные и типы" },
+                            { ID: "arrays_lists", Name: "Массивы и списки" },
+                            { ID: "collections", Name: "Коллекции (Set, Map)" },
+                            { ID: "methods", Name: "Методы" },
+                            { ID: "classes_objects", Name: "Классы и объекты" },
+                            { ID: "inheritance", Name: "Наследование" },
+                            { ID: "interfaces", Name: "Интерфейсы" },
+                            { ID: "generics", Name: "Дженерики" },
+                            { ID: "exceptions", Name: "Исключения" },
+                            { ID: "streams", Name: "Streams API" },
+                            { ID: "lambda_expressions", Name: "Lambda выражения" },
+                            { ID: "concurrency", Name: "Многопоточность" }
+                        ],
+                        cpp: [
+                            { ID: "variables_types", Name: "Переменные и типы" },
+                            { ID: "pointers_references", Name: "Указатели и ссылки" },
+                            { ID: "arrays_vectors", Name: "Массивы и векторы" },
+                            { ID: "functions", Name: "Функции" },
+                            { ID: "classes_objects", Name: "Классы и объекты" },
+                            { ID: "inheritance", Name: "Наследование" },
+                            { ID: "templates", Name: "Шаблоны" },
+                            { ID: "smart_pointers", Name: "Умные указатели" },
+                            { ID: "stl", Name: "STL контейнеры и алгоритмы" },
+                            { ID: "move_semantics", Name: "Move семантика" },
+                            { ID: "lambda", Name: "Lambda выражения" },
+                            { ID: "multithreading", Name: "Многопоточность" }
+                        ],
+                        rust: [
+                            { ID: "variables_types", Name: "Переменные и типы" },
+                            { ID: "ownership", Name: "Владение (ownership)" },
+                            { ID: "borrowing", Name: "Заимствование (borrowing)" },
+                            { ID: "lifetimes", Name: "Время жизни" },
+                            { ID: "vectors", Name: "Векторы" },
+                            { ID: "hashmaps", Name: "HashMap" },
+                            { ID: "functions", Name: "Функции" },
+                            { ID: "structs", Name: "Структуры" },
+                            { ID: "enums", Name: "Перечисления" },
+                            { ID: "pattern_matching", Name: "Сопоставление с образцом" },
+                            { ID: "error_handling", Name: "Обработка ошибок (Result, Option)" },
+                            { ID: "concurrency", Name: "Многопоточность" }
+                        ],
+                        typescript: [
+                            { ID: "types", Name: "Типы" },
+                            { ID: "interfaces", Name: "Интерфейсы" },
+                            { ID: "generics", Name: "Дженерики" },
+                            { ID: "unions_intersections", Name: "Объединения и пересечения типов" },
+                            { ID: "type_guards", Name: "Защитники типов" },
+                            { ID: "decorators", Name: "Декораторы" },
+                            { ID: "utility_types", Name: "Утилитарные типы" },
+                            { ID: "modules", Name: "Модули" },
+                            { ID: "async_promises", Name: "Асинхронность" },
+                            { ID: "classes", Name: "Классы" },
+                            { ID: "namespaces", Name: "Пространства имен" }
+                        ]
+                    }
+                };
+            },
+
+            methods: {
+                getTopicsForLanguage(language) {
+                    return this.topics[language] || [];
+                },
+
+                startGame() {
+                    this.gameState = 'playing';
+                    this.score = 0;
+                    this.questionCount = 1;
+                    this.loadQuestion();
+                },
+
+                async loadQuestion() {
+                    this.currentQuestion = null;
+                    this.selectedAnswer = '';
+                    this.freeTextAnswer = '';
+
+                    // Random question type
+                    const questionTypes = ['multiple_choice', 'free_text'];
+                    const randomQuestionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+
+                    try {
+                        const response = await fetch('https://snippet-war.casnerano.tech/api/questions/generate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                language: this.selectedLanguage,
+                                topic: this.selectedTopic,
+                                difficulty: this.selectedDifficulty,
+                                question_type: randomQuestionType
+                            })
+                        });
+
+                        if (response.ok) {
+                            this.currentQuestion = await response.json();
+                            this.startTimer();
+                        } else {
+                            console.error('Failed to load question');
+                            // Fallback to mock data for demo
+                            this.loadMockQuestion(randomQuestionType);
+                        }
+                    } catch (error) {
+                        console.error('Error loading question:', error);
+                        // Fallback to mock data for demo
+                        this.loadMockQuestion(randomQuestionType);
+                    }
+                },
+
+                loadMockQuestion(questionType) {
+                    if (questionType === 'multiple_choice') {
+                        this.currentQuestion = {
+                            id: "mock-1",
+                            language: this.selectedLanguage,
+                            topic: this.selectedTopic,
+                            difficulty: this.selectedDifficulty,
+                            question_type: "multiple_choice",
+                            code: "package main\n\nimport \"fmt\"\n\nfunc main() {\n    var a int = 10\n    var b int = 20\n    var c = a + b\n    var d = \"Result: \" + fmt.Sprint(c)\n    fmt.Println(d)\n}",
+                            question: "Что выведет этот код?",
+                            options: [
+                                "Result: 30",
+                                "Result: 1020",
+                                "30",
+                                "Result: a + b"
+                            ],
+                            correct_answer: "Result: 30",
+                            explanation: "В этом коде объявлены три переменные: a и b типа int, которым присвоены значения 10 и 20 соответственно. Далее вычисляется сумма a + b и результат сохраняется в переменную c (30). Затем создается строка d, которая содержит текст \"Result: \" и к ней конкатенируется числовое значение c, преобразованное в строку с помощью fmt.Sprint. В итоге на экран выводится строка \"Result: 30\"."
+                        };
+                    } else {
+                        this.currentQuestion = {
+                            id: "mock-2",
+                            language: this.selectedLanguage,
+                            topic: this.selectedTopic,
+                            difficulty: this.selectedDifficulty,
+                            question_type: "free_text",
+                            code: "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar a int = 10\n\tvar b float64 = 3.5\n\tc := float64(a) + b\n\tfmt.Println(c)\n}",
+                            question: "Что выведет этот код?",
+                            correct_answer: "13.5",
+                            acceptable_variants: [
+                                "13.5",
+                                "13.50",
+                                "13.500000"
+                            ],
+                            explanation: "В этом коде объявлены переменные разных типов: a типа int и b типа float64. Для сложения с плавающей точкой переменную a нужно явно привести к float64, иначе компилятор выдаст ошибку. После приведения a к float64 и сложения с b получается 13.5, что и выводится на экран."
+                        };
+                    }
+                    this.startTimer();
+                },
+
+                startTimer() {
+                    this.timeLeft = 30;
+                    clearInterval(this.timer);
+                    this.timer = setInterval(() => {
+                        this.timeLeft--;
+                        if (this.timeLeft <= 0) {
+                            clearInterval(this.timer);
+                            this.submitAnswer(null);
+                        }
+                    }, 1000);
+                },
+
+                selectAnswer(answer) {
+                    this.selectedAnswer = answer;
+                    this.submitAnswer(answer);
+                },
+
+                submitFreeTextAnswer() {
+                    if (this.freeTextAnswer.trim()) {
+                        this.submitAnswer(this.freeTextAnswer.trim());
+                    }
+                },
+
+                submitAnswer(answer) {
+                    clearInterval(this.timer);
+
+                    if (!this.currentQuestion) return;
+
+                    let correct = false;
+
+                    if (this.currentQuestion.question_type === 'multiple_choice') {
+                        correct = answer === this.currentQuestion.correct_answer;
+                    } else {
+                        // Check against correct answer and acceptable variants
+                        const userAnswer = answer ? answer.toLowerCase().trim() : '';
+                        const correctAnswer = this.currentQuestion.correct_answer.toLowerCase().trim();
+                        const acceptableVariants = this.currentQuestion.acceptable_variants || [];
+
+                        correct = userAnswer === correctAnswer ||
+                                 acceptableVariants.some(variant =>
+                                     userAnswer === variant.toLowerCase().trim()
+                                 );
+                    }
+
+                    this.isCorrect = correct;
+
+                    if (correct) {
+                        this.score++;
+                    }
+
+                    this.gameState = 'result';
+                },
+
+                loadNextQuestion() {
+                    this.questionCount++;
+                    this.gameState = 'playing';
+                    this.loadQuestion();
+                }
+            },
+
+            mounted() {
+                // Initialize Telegram WebApp if available
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.ready();
+                    window.Telegram.WebApp.expand();
+                }
+            }
+        }).mount('#app');
+    </script>
 </body>
 </html>
