@@ -43,7 +43,7 @@ func main() {
 	// Загрузка конфигурации
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		log.Printf("Failed to load config: %v", err)
 	}
 
 	// Проверяем наличие конфигурации ProxyAPI
