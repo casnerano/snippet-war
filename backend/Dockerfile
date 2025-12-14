@@ -12,6 +12,7 @@ FROM ubuntu:24.04
 WORKDIR /app
 
 COPY --from=builder /build/snippet-war ./
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 EXPOSE 8081
 
