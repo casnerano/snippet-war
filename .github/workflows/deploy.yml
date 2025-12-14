@@ -66,19 +66,21 @@ jobs:
             docker stop ${{ env.IMAGE_NAME }}-container
             docker rm ${{ env.IMAGE_NAME }}-container
 
-            docker run -d \
+            sh -c "
+              docker run -d \
               --name ${{ env.IMAGE_NAME }}-container \
               -p 8081:8081 \
-              -e OPENROUTER_API_KEY="${{ secrets.OPENROUTER_API_KEY }}" \ 
-              -e OPENROUTER_MODEL=deepseek/deepseek-chat \ 
-              -e OPENROUTER_BASE_URL=https://openrouter.ai/api/v1 \ 
-              -e OPENROUTER_TIMEOUT=30s \ 
-              -e OPENROUTER_MAX_TOKENS=2000 \ 
-              -e PROXYAPI_BASE_URL=https://api.proxyapi.ru/openai/v1 \ 
-              -e PROXYAPI_TIMEOUT=30s \ 
-              -e PROXYAPI_MAX_TOKENS=2000 \ 
-              -e PROXYAPI_MODEL=gpt-4.1-mini \ 
-              -e PROXYAPI_API_KEY="${{ secrets.PROXYAPI_API_KEY }}" \
+              -e OPENROUTER_API_KEY='${{ secrets.OPENROUTER_API_KEY }}' \
+              -e OPENROUTER_MODEL=deepseek/deepseek-chat \
+              -e OPENROUTER_BASE_URL=https://openrouter.ai/api/v1 \
+              -e OPENROUTER_TIMEOUT=30s \
+              -e OPENROUTER_MAX_TOKENS=2000 \
+              -e PROXYAPI_BASE_URL=https://api.proxyapi.ru/openai/v1 \
+              -e PROXYAPI_TIMEOUT=30s \
+              -e PROXYAPI_MAX_TOKENS=2000 \
+              -e PROXYAPI_MODEL=gpt-4.1-mini \
+              -e PROXYAPI_API_KEY='${{ secrets.PROXYAPI_API_KEY }}' \
               ${{ env.IMAGE_NAME }}:latest
-
+            "
+            
             docker image prune -f
