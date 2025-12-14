@@ -8,6 +8,18 @@ import (
 	"time"
 )
 
+const (
+	OpenRouterModel     = "deepseek/deepseek-chat"
+	OpenRouterBaseURL   = "https://openrouter.ai/api/v1"
+	OpenRouterTimeout   = "30s"
+	OpenRouterMaxTokens = 2000
+
+	ProxyAPIBaseURL   = "https://api.proxyapi.ru/openai/v1"
+	ProxyAPITimeout   = "30s"
+	ProxyAPIMaxTokens = 2000
+	ProxyAPIModel     = "gpt-4.1-mini"
+)
+
 // OpenRouterConfig содержит конфигурацию для OpenRouter API.
 type OpenRouterConfig struct {
 	APIKey    string
