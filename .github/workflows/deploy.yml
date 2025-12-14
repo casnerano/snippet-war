@@ -29,12 +29,6 @@ jobs:
       - name: Upload image as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: snippet-war-docker-image
-          path: snippet-war.tar
-
-      - name: Upload image as artifact
-        uses: actions/upload-artifact@v4
-        with:
           name: ${{ env.IMAGE_NAME }}-docker-image
           path: ${{ env.IMAGE_NAME }}.tar
 
