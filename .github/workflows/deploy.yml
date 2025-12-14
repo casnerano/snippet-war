@@ -50,7 +50,7 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: ${{ env.IMAGE_NAME }}.tar
-          target: /tmp
+          target: ~/tmp
 
       - name: Deploy image to server via ssh
         uses: appleboy/ssh-action@v1.0.0
@@ -59,7 +59,7 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker load -i /tmp/${{ env.IMAGE_NAME }}.tar
+            docker load -i ~/tmp/${{ env.IMAGE_NAME }}.tar
 
             docker stop ${{ env.IMAGE_NAME }}-container
             docker rm ${{ env.IMAGE_NAME }}-container
