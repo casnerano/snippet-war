@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  platform-service:
+    build: backend/platform-service
+    ports:
+      - "8081:8081"
+  content-service:
+    build: backend/content-service
+    ports:
+      - "8081:8082"
