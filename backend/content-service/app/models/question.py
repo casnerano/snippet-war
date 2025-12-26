@@ -56,7 +56,7 @@ class Question(BaseModel):
             raise ValueError("code is required")
         return v
 
-    @field_validator("question")
+    @field_validator("question_text")
     @classmethod
     def validate_question_text(cls, v: str) -> str:
         """Validate question text is not empty."""
