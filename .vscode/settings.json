@@ -1,0 +1,10 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend/content-service/.venv/bin/python",
+    "python.analysis.extraPaths": [
+      "${workspaceFolder}/backend/content-service"
+    ],
+    "[python]": {
+      "python.defaultInterpreterPath": "${workspaceFolder}/backend/content-service/.venv/bin/python"
+    },
+    "python-envs.pythonProjects": []
+  }

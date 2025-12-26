@@ -1,11 +1,19 @@
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
-COPY ./ ./
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-RUN pip install --no-cache-dir uv
+# Copy project files
+COPY pyproject.toml ./
+
+# Install dependencies
+RUN uv sync
+
+# Copy application code
+COPY ./app ./app
 
 EXPOSE 8081
 
-CMD ["uv", "run", "server.py"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8081"]
