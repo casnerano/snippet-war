@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package example;
 
-option go_package = "github.com/casnerano/snippet-war/api/v1/quiz;quiz";
+option go_package = "github.com/casnerano/snippet-war/pkg/api/v1/quiz;quiz";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
@@ -65,8 +65,3 @@ enum QuestionType {
   QUESTION_TYPE_MULTIPLE_CHOICE = 1;
   QUESTION_TYPE_FREE_TEXT = 2;
 }
-
-
-{
-  "dsfsdf"
-    }

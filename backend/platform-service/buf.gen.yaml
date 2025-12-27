@@ -4,9 +4,9 @@ plugins:
     out: .
     strategy: directory
     opt:
-      - module=github.com/casnerano/protoc-gen-go-rbac
+      - module=github.com/casnerano/snippet-war
   - local: ./bin/protoc-gen-go-grpc
     out: .
     strategy: directory
     opt:
-      - module=github.com/casnerano/protoc-gen-go-rbac
+      - module=github.com/casnerano/snippet-war

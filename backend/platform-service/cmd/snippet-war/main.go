@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
-	"net/http"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -23,10 +22,12 @@ func main() {
 	flag.StringVar(&addr, "addr", defaultAddr, "Server address")
 	flag.Parse()
 
-	// Создание сервера с сервисом
-	srv := server.New(addr)
+	grpcServer, err := server.New(addr)
+	if err != nil {
+		log.Fatal("failed initialization grpc server: ", err.Error())
+	}
 
-	if err := srv.Run(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		os.Exit(1)
+	if err = grpcServer.Run(ctx); err != nil {
+		log.Fatal("failed run grpc server: ", err.Error())
 	}
 }
