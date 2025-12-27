@@ -1,11 +1,43 @@
 version: "3.8"
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: snippet-war-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-snippet_war}
+      POSTGRES_USER: ${POSTGRES_USER:-snippet_war}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-snippet_war}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-snippet_war}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   platform-service:
     build: backend/platform-service
     ports:
       - "8081:8081"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+
   content-service:
     build: backend/content-service
     ports:
-      - "8081:8082"
+      - "8082:8081"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

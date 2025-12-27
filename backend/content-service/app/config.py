@@ -1,5 +1,6 @@
 """Application configuration."""
 
+from loguru import logger
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,7 +8,11 @@ class ProxyAPIConfig(BaseSettings):
     """ProxyAPI configuration."""
 
     model_config = SettingsConfigDict(
-        env_file="./.env",
+        env_file=[
+            ".env.root",
+            ".env.service",
+            ".env",
+        ],  # Load in order: root, service, local
         env_prefix="PROXYAPI_",
         case_sensitive=False,
         env_file_encoding="utf-8",
@@ -33,4 +38,7 @@ class Config:
 
 def load_config() -> Config:
     """Load configuration from environment variables."""
-    return Config()
+    logger.info("Loading configuration from environment variables")
+    cfg = Config()
+    logger.info(f"Config: {cfg.proxyapi}")
+    return cfg
