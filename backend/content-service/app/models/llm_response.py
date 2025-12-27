@@ -22,8 +22,7 @@ class LLMQuestionResponse(BaseModel):
     question: str
     question_type: QuestionType
     options: list[str] | None = None
-    correct_answer: str
-    acceptable_variants: list[str] | None = None
+    correct_answers: list[str]
     case_sensitive: bool = False
     explanation: str
     difficulty: Difficulty
@@ -66,9 +65,9 @@ class LLMQuestionResponse(BaseModel):
             if not self.options:
                 raise ValueError("options are required for multiple choice questions")
             validate_multiple_choice_options(self.options)
-            validate_multiple_choice_answer(self.correct_answer, self.options)
+            validate_multiple_choice_answer(self.correct_answers, self.options)
         elif self.question_type == QuestionType.FREE_TEXT:
-            validate_free_text_answer(self.correct_answer)
+            validate_free_text_answer(self.correct_answers)
 
         return self
 
@@ -85,8 +84,7 @@ class LLMQuestionResponse(BaseModel):
             code=self.code,
             question_text=self.question,
             options=self.options,
-            correct_answer=self.correct_answer,
-            acceptable_variants=self.acceptable_variants,
+            correct_answers=self.correct_answers,
             case_sensitive=self.case_sensitive,
             explanation=self.explanation,
         )

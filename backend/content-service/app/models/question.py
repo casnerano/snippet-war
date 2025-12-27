@@ -66,8 +66,7 @@ class Question(BaseModel):
     code: str
     question_text: str
     options: list[str] | None = None
-    correct_answer: str
-    acceptable_variants: list[str] | None = None
+    correct_answers: list[str]
     case_sensitive: bool = False
     explanation: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -88,12 +87,12 @@ class Question(BaseModel):
             raise ValueError("question text is required")
         return v
 
-    @field_validator("correct_answer")
+    @field_validator("correct_answers")
     @classmethod
-    def validate_correct_answer(cls, v: str) -> str:
+    def validate_correct_answers(cls, v: list[str]) -> list[str]:
         """Validate correct answer is not empty."""
-        if not v:
-            raise ValueError("correct answer is required")
+        if not v or len(v) == 0:
+            raise ValueError("correct answers must be a non-empty list")
         return v
 
     @field_validator("explanation")
@@ -111,9 +110,9 @@ class Question(BaseModel):
             if not self.options:
                 raise ValueError("options are required for multiple choice questions")
             validate_multiple_choice_options(self.options)
-            validate_multiple_choice_answer(self.correct_answer, self.options)
+            validate_multiple_choice_answer(self.correct_answers, self.options)
         elif self.question_type == QuestionType.FREE_TEXT:
-            validate_free_text_answer(self.correct_answer)
+            validate_free_text_answer(self.correct_answers)
 
         if not is_valid_topic(self.language, self.topic):
             raise ValueError(

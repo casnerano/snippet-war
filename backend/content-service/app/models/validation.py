@@ -9,20 +9,21 @@ def validate_multiple_choice_options(options: list[str]) -> None:
         raise ValueError("multiple choice question must have at most 5 options")
 
 
-def validate_multiple_choice_answer(correct_answer: str, options: list[str]) -> None:
+def validate_multiple_choice_answer(
+    correct_answers: list[str], options: list[str]
+) -> None:
     """Validate correct answer for multiple choice question."""
-    if not correct_answer:
-        raise ValueError(
-            "correct answer must be a non-empty string for multiple choice"
-        )
+    if not correct_answers or len(correct_answers) == 0:
+        raise ValueError("correct answer must be a non-empty list for multiple choice")
 
-    if correct_answer not in options:
-        raise ValueError(
-            f"correct answer '{correct_answer}' must be one of the options: {options}"
-        )
+    for answer in correct_answers:
+        if answer not in options:
+            raise ValueError(
+                f"correct answer '{answer}' must be one of the options: {options}"
+            )
 
 
-def validate_free_text_answer(correct_answer: str) -> None:
+def validate_free_text_answer(correct_answers: list[str]) -> None:
     """Validate correct answer for free text question."""
-    if not correct_answer:
-        raise ValueError("correct answer must be a non-empty string for free text")
+    if not correct_answers or len(correct_answers) == 0:
+        raise ValueError("correct answer must be a non-empty list for free text")

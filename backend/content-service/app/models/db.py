@@ -41,8 +41,7 @@ class QuestionDB(Base):
     code: Mapped[str] = mapped_column(Text, nullable=False)
     question_text: Mapped[str] = mapped_column(Text, nullable=False)
     options: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
-    correct_answer: Mapped[str] = mapped_column(Text, nullable=False)
-    acceptable_variants: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    correct_answers: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
     case_sensitive: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
