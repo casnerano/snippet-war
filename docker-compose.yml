@@ -1,8 +1,6 @@
-version: "3.8"
-
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:latest
     container_name: snippet-war-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-snippet_war}
@@ -11,12 +9,39 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-snippet_war}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${POSTGRES_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - '9090:80'
+    networks:
+      - internal
+
+  migrate:
+    image: migrate/migrate:latest
+    volumes:
+      - ./backend/migrations:/migrations
+    command: >
+      sh -c 'migrate -path /migrations
+      -database "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@postgres/$$POSTGRES_DB?sslmode=disable"
+      up'
+    depends_on:
+      - postgres
+    networks:
+      - internal
 
   platform-service:
     build: backend/platform-service
@@ -27,7 +52,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    
+    networks:
+      - internal
 
   content-service:
     build: backend/content-service
@@ -38,6 +64,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - internal
 
 volumes:
-  postgres_data:
+  postgres-data: {}
+
+networks:
+  internal:
+    driver: bridge
