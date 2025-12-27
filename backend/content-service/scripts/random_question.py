@@ -55,17 +55,18 @@ def print_question(question: dict) -> None:
 
     if question.get("options"):
         print("\nOptions:")
+        correct_answers = question.get("correct_answers", [])
+        if not isinstance(correct_answers, list):
+            correct_answers = [correct_answers]
         for i, option in enumerate(question["options"], 1):
-            marker = "✓" if option == question.get("correct_answer") else " "
+            marker = "✓" if option in correct_answers else " "
             print(f"  {marker} {i}. {option}")
 
-    print(f"\nCorrect Answer: {question.get('correct_answer', '')}")
-
-    if question.get("acceptable_variants"):
-        print(f"Acceptable Variants: {', '.join(question['acceptable_variants'])}")
-
-    if question.get("case_sensitive") is not None:
-        print(f"Case Sensitive: {question.get('case_sensitive')}")
+    correct_answers = question.get("correct_answers", [])
+    if isinstance(correct_answers, list):
+        print(f"\nCorrect Answer(s): {', '.join(correct_answers)}")
+    else:
+        print(f"\nCorrect Answer: {correct_answers}")
 
     print("\nExplanation:")
     print("-" * 80)

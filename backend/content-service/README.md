@@ -98,7 +98,7 @@ Generate a question based on request parameters.
   "code": "def add(a, b):\n    return a + b\n\nprint(add(2, 3))",
   "question_text": "Что выведет этот код?",
   "options": ["5", "6", "7", "8"],
-  "correct_answer": "5",
+  "correct_answers": ["5"],
   "explanation": "...",
   "created_at": "2024-01-01T00:00:00Z"
 }

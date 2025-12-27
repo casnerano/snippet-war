@@ -17,3 +17,11 @@ class ValidationError(BusinessLogicError):
     def __init__(self, detail: str) -> None:
         """Initialize validation error."""
         super().__init__(detail, status_code=400)
+
+
+class DatabaseError(BusinessLogicError):
+    """Database operation error (500)."""
+
+    def __init__(self, detail: str) -> None:
+        """Initialize database error."""
+        super().__init__(detail, status_code=500)

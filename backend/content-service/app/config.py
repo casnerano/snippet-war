@@ -9,10 +9,8 @@ class ProxyAPIConfig(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=[
-            ".env.root",
-            ".env.service",
             ".env",
-        ],  # Load in order: root, service, local
+        ],
         env_prefix="PROXYAPI_",
         case_sensitive=False,
         env_file_encoding="utf-8",
@@ -27,6 +25,58 @@ class ProxyAPIConfig(BaseSettings):
     max_tokens: int = 2000
 
 
+class DatabaseConfig(BaseSettings):
+    """Database configuration."""
+
+    model_config = SettingsConfigDict(
+        env_file=[
+            ".env",
+        ],
+        env_prefix="DATABASE_",
+        case_sensitive=False,
+        env_file_encoding="utf-8",
+        enable_decoding=False,
+        extra="ignore",
+    )
+
+    host: str = "localhost"
+    port: int = 5432
+    user: str = "snippet_war"
+    password: str = "snippet_war"
+    database: str = "snippet_war"
+    pool_size: int = 5
+    max_overflow: int = 10
+
+    @property
+    def url(self) -> str:
+        """Get database URL for asyncpg."""
+        return (
+            f"postgresql+asyncpg://{self.user}:{self.password}@"
+            f"{self.host}:{self.port}/{self.database}"
+        )
+
+
+class LoggingConfig(BaseSettings):
+    """Logging configuration."""
+
+    model_config = SettingsConfigDict(
+        env_file=[
+            ".env",
+        ],
+        env_prefix="LOG_",
+        case_sensitive=False,
+        env_file_encoding="utf-8",
+        enable_decoding=False,
+        extra="ignore",
+    )
+
+    level: str = "INFO"
+    file: str | None = "app.log"
+    dir: str = "./logs"
+    enable_json: bool = True
+    enable_console: bool = True
+
+
 class Config:
     """Application configuration."""
 
@@ -34,6 +84,8 @@ class Config:
         """Initialize config with nested settings."""
         # Load nested configs
         self.proxyapi = ProxyAPIConfig()
+        self.database = DatabaseConfig()
+        self.logging = LoggingConfig()
 
 
 def load_config() -> Config:
@@ -41,4 +93,10 @@ def load_config() -> Config:
     logger.info("Loading configuration from environment variables")
     cfg = Config()
     logger.info(f"Config: {cfg.proxyapi}")
+    logger.info(
+        "Database config loaded",
+        host=cfg.database.host,
+        port=cfg.database.port,
+        database=cfg.database.database,
+    )
     return cfg

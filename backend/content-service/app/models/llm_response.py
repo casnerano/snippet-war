@@ -22,9 +22,7 @@ class LLMQuestionResponse(BaseModel):
     question: str
     question_type: QuestionType
     options: list[str] | None = None
-    correct_answer: str
-    acceptable_variants: list[str] | None = None
-    case_sensitive: bool = False
+    correct_answers: list[str]
     explanation: str
     difficulty: Difficulty
     topic: str
@@ -33,9 +31,8 @@ class LLMQuestionResponse(BaseModel):
     @field_validator("code")
     @classmethod
     def validate_code(cls, v: str) -> str:
-        """Validate code is not empty."""
-        if not v:
-            raise ValueError("code is required")
+        """Validate code field exists (can be empty string)."""
+        # Code can be empty string for theoretical questions without code
         return v
 
     @field_validator("question")
@@ -66,9 +63,9 @@ class LLMQuestionResponse(BaseModel):
             if not self.options:
                 raise ValueError("options are required for multiple choice questions")
             validate_multiple_choice_options(self.options)
-            validate_multiple_choice_answer(self.correct_answer, self.options)
+            validate_multiple_choice_answer(self.correct_answers, self.options)
         elif self.question_type == QuestionType.FREE_TEXT:
-            validate_free_text_answer(self.correct_answer)
+            validate_free_text_answer(self.correct_answers)
 
         return self
 
@@ -85,10 +82,28 @@ class LLMQuestionResponse(BaseModel):
             code=self.code,
             question_text=self.question,
             options=self.options,
-            correct_answer=self.correct_answer,
-            acceptable_variants=self.acceptable_variants,
-            case_sensitive=self.case_sensitive,
+            correct_answers=self.correct_answers,
             explanation=self.explanation,
         )
 
         return question
+
+
+class LLMQuestionsResponse(BaseModel):
+    """Response model from LLM for multiple questions generation."""
+
+    questions: list[LLMQuestionResponse]
+
+    @field_validator("questions")
+    @classmethod
+    def validate_questions(
+        cls, v: list[LLMQuestionResponse]
+    ) -> list[LLMQuestionResponse]:
+        """Validate questions list is not empty."""
+        if not v or len(v) == 0:
+            raise ValueError("questions list must not be empty")
+        return v
+
+    def to_questions(self) -> list["Question"]:
+        """Convert LLM response to list of Question models."""
+        return [q.to_question() for q in self.questions]

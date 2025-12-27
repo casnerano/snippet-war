@@ -1,10 +1,13 @@
 """Main FastAPI application."""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from app.clients import ProxyAPIClient
 from app.config import load_config
+from app.database import Database
 from app.exceptions import BusinessLogicError
+from app.logging_config import setup_logging
 from app.routers import questions_router
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -14,20 +17,32 @@ from loguru import logger
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for app initialization."""
-    # Load configuration
+    # Load configuration first (before logging setup)
     try:
         config = load_config()
-        logger.info(
-            "Config loaded successfully",
-            provider="ProxyAPI",
-            model=config.proxyapi.model,
-            base_url=config.proxyapi.base_url,
-            timeout=config.proxyapi.timeout,
-            max_tokens=config.proxyapi.max_tokens,
-        )
     except Exception as e:
-        logger.error(f"Failed to load config: {e}")
+        # Basic error logging before full logging setup
+        print(f"Failed to load config: {e}")
         raise
+
+    # Setup logging with configuration
+    setup_logging(
+        log_level=config.logging.level,
+        log_file=config.logging.file,
+        log_dir=Path(config.logging.dir),
+        enable_json=config.logging.enable_json,
+        enable_console=config.logging.enable_console,
+    )
+
+    # Log configuration details
+    logger.info(
+        "Config loaded successfully",
+        provider="ProxyAPI",
+        model=config.proxyapi.model,
+        base_url=config.proxyapi.base_url,
+        timeout=config.proxyapi.timeout,
+        max_tokens=config.proxyapi.max_tokens,
+    )
 
     # Check ProxyAPI configuration
     if not config.proxyapi.api_key:
@@ -42,9 +57,27 @@ async def lifespan(app: FastAPI):
     llm_client = ProxyAPIClient(config.proxyapi)
     app.state.proxyapi_client = llm_client
 
+    # Initialize database connection and store in app state
+    try:
+        database = Database(config.database)
+        await database.init()
+        app.state.database = database
+        logger.info("Database connection initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
+
     logger.info("Application started successfully")
 
     yield
+
+    # Close database connection
+    try:
+        db: Database = app.state.database
+        await db.close()
+        logger.info("Database connection closed")
+    except Exception as e:
+        logger.error(f"Error closing database connection: {e}")
 
     # Close the client on shutdown
     await llm_client.close()

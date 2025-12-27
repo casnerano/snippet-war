@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from app.models.llm_response import LLMQuestionResponse
+from app.models.llm_response import LLMQuestionResponse, LLMQuestionsResponse
 
 
 class LLMClient(Protocol):
@@ -17,6 +17,21 @@ class LLMClient(Protocol):
 
         Returns:
             LLMQuestionResponse with generated question data
+
+        Raises:
+            Exception: If LLM request fails
+        """
+        ...
+
+    async def generate_questions(self, prompt: str) -> LLMQuestionsResponse:
+        """
+        Generate multiple questions response from LLM.
+
+        Args:
+            prompt: Prompt text for LLM
+
+        Returns:
+            LLMQuestionsResponse with generated questions data
 
         Raises:
             Exception: If LLM request fails
