@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:16-alpine
     container_name: snippet-war-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-snippet_war}
@@ -11,10 +11,9 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-snippet_war}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"
+      interval: 5s
+      timeout: 3s
     networks:
       - internal
 
@@ -34,12 +33,13 @@ services:
     image: migrate/migrate:latest
     volumes:
       - ./backend/migrations:/migrations
-    command: >
-      sh -c 'migrate -path /migrations
-      -database "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@postgres/$$POSTGRES_DB?sslmode=disable"
-      up'
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}?sslmode=disable"
+      - "up"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - internal
 
