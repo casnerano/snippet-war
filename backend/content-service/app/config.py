@@ -56,6 +56,27 @@ class DatabaseConfig(BaseSettings):
         )
 
 
+class LoggingConfig(BaseSettings):
+    """Logging configuration."""
+
+    model_config = SettingsConfigDict(
+        env_file=[
+            ".env",
+        ],
+        env_prefix="LOG_",
+        case_sensitive=False,
+        env_file_encoding="utf-8",
+        enable_decoding=False,
+        extra="ignore",
+    )
+
+    level: str = "INFO"
+    file: str | None = "app.log"
+    dir: str = "./logs"
+    enable_json: bool = True
+    enable_console: bool = True
+
+
 class Config:
     """Application configuration."""
 
@@ -64,6 +85,7 @@ class Config:
         # Load nested configs
         self.proxyapi = ProxyAPIConfig()
         self.database = DatabaseConfig()
+        self.logging = LoggingConfig()
 
 
 def load_config() -> Config:
