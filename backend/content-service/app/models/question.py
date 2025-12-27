@@ -68,7 +68,6 @@ class Question(BaseModel):
     question_text: str
     options: list[str] | None = None
     correct_answers: list[str]
-    case_sensitive: bool = False
     explanation: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 

@@ -42,9 +42,6 @@ class QuestionDB(Base):
     question_text: Mapped[str] = mapped_column(Text, nullable=False)
     options: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     correct_answers: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
-    case_sensitive: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="false"
-    )
     explanation: Mapped[str] = mapped_column(Text, nullable=False)
     likes_count: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"

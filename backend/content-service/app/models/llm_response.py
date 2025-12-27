@@ -23,7 +23,6 @@ class LLMQuestionResponse(BaseModel):
     question_type: QuestionType
     options: list[str] | None = None
     correct_answers: list[str]
-    case_sensitive: bool = False
     explanation: str
     difficulty: Difficulty
     topic: str
@@ -85,7 +84,6 @@ class LLMQuestionResponse(BaseModel):
             question_text=self.question,
             options=self.options,
             correct_answers=self.correct_answers,
-            case_sensitive=self.case_sensitive,
             explanation=self.explanation,
         )
 

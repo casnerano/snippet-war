@@ -68,9 +68,6 @@ def print_question(question: dict) -> None:
     else:
         print(f"\nCorrect Answer: {correct_answers}")
 
-    if question.get("case_sensitive") is not None:
-        print(f"Case Sensitive: {question.get('case_sensitive')}")
-
     print("\nExplanation:")
     print("-" * 80)
     print(question.get("explanation", ""))

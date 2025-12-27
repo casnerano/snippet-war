@@ -42,7 +42,6 @@ class QuestionRepository:
                 question_text=question.question_text,
                 options=question.options,
                 correct_answers=question.correct_answers,
-                case_sensitive=question.case_sensitive,
                 explanation=question.explanation,
                 created_at=question.created_at,
             )
@@ -203,7 +202,6 @@ class QuestionRepository:
             question_text=question_db.question_text,
             options=question_db.options,
             correct_answers=question_db.correct_answers,
-            case_sensitive=question_db.case_sensitive,
             explanation=question_db.explanation,
             created_at=question_db.created_at,
         )

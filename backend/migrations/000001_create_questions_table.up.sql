@@ -9,7 +9,6 @@ CREATE TABLE questions (
     question_text TEXT NOT NULL,
     options JSONB,
     correct_answers JSONB NOT NULL,
-    case_sensitive BOOLEAN NOT NULL DEFAULT false,
     explanation TEXT NOT NULL,
     likes_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
@@ -28,7 +27,6 @@ COMMENT ON COLUMN questions.code IS 'Code snippet for the question';
 COMMENT ON COLUMN questions.question_text IS 'The question text';
 COMMENT ON COLUMN questions.options IS 'Array of options for multiple choice questions (JSONB)';
 COMMENT ON COLUMN questions.correct_answers IS 'Array of correct answers (JSONB). For multiple_choice: array of exact texts from options. For free_text: array of all acceptable variants.';
-COMMENT ON COLUMN questions.case_sensitive IS 'Whether the answer is case sensitive';
 COMMENT ON COLUMN questions.explanation IS 'Explanation of the correct answer';
 COMMENT ON COLUMN questions.likes_count IS 'Number of likes the question has received';
 COMMENT ON COLUMN questions.created_at IS 'Timestamp when the question was created';
