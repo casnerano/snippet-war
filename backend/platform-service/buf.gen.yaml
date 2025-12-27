@@ -1,0 +1,12 @@
+version: v2
+plugins:
+  - local: ./bin/protoc-gen-go
+    out: .
+    strategy: directory
+    opt:
+      - module=github.com/casnerano/protoc-gen-go-rbac
+  - local: ./bin/protoc-gen-go-grpc
+    out: .
+    strategy: directory
+    opt:
+      - module=github.com/casnerano/protoc-gen-go-rbac
