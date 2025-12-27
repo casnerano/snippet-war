@@ -2,33 +2,30 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-
-	"github.com/casnerano/snippet-war/internal/service"
 )
 
 type Server struct {
-	httpServer      *http.Server
-	router          *chi.Mux
-	questionService *service.QuestionService
+	httpServer *http.Server
+	router     *chi.Mux
 }
 
-func New(addr string, questionService *service.QuestionService) *Server {
+func New(addr string) *Server {
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
-	// Создаем handler для вопросов
-	questionHandler := NewQuestionHandler(questionService, slog.Default())
-
-	// Регистрируем API routes
 	router.Route("/api", func(r chi.Router) {
-		r.Post("/questions/generate", questionHandler.GenerateQuestion)
+		r.Get("/ping", func(writer http.ResponseWriter, _ *http.Request) {
+			_, _ = fmt.Fprintln(writer, "pong")
+		})
+		//r.Post("/questions/generate", questionHandler.GenerateQuestion)
 	})
 
 	server := Server{
@@ -36,7 +33,6 @@ func New(addr string, questionService *service.QuestionService) *Server {
 			Addr:    addr,
 			Handler: router,
 		},
-		questionService: questionService,
 	}
 
 	return &server
