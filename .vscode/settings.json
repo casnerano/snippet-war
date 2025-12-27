@@ -6,5 +6,9 @@
     "[python]": {
       "python.defaultInterpreterPath": "${workspaceFolder}/backend/content-service/.venv/bin/python"
     },
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "files.associations": {
+      "*.up.sql": "sql",
+      "*.down.sql": "sql"
+    }
   }
