@@ -90,7 +90,7 @@ async def get_questions_batch(
         return await service.get_questions_batch(
             db_session=db,
             language=request.language,
-            topic=request.topic,
+            topics=request.topics,
             difficulty=request.difficulty,
             count=request.count,
             question_type=request.question_type,

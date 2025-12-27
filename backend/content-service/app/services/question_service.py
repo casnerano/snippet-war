@@ -1,5 +1,6 @@
 """Question generation service."""
 
+import random
 import uuid
 
 from app.clients import LLMClient, build_prompt
@@ -129,7 +130,7 @@ class QuestionService:
         self,
         db_session: AsyncSession,
         language: Language,
-        topic: str,
+        topics: list[str],
         difficulty: Difficulty,
         count: int,
         question_type: QuestionType = QuestionType.MULTIPLE_CHOICE,
@@ -141,9 +142,10 @@ class QuestionService:
         Args:
             db_session: Database session
             language: Programming language
-            topic: Topic
+            topics: List of topics
             difficulty: Difficulty level
             count: Number of questions to return
+            question_type: Question type
             telegram_user_id: Optional Telegram user ID
 
         Returns:
@@ -158,7 +160,7 @@ class QuestionService:
         logger.info(
             "getting questions batch",
             language=language.value,
-            topic=topic,
+            topics=topics,
             difficulty=difficulty.value,
             count=count,
             telegram_user_id=telegram_user_id,
@@ -173,62 +175,96 @@ class QuestionService:
             )
             user_id = user.id
 
-        # Get existing questions
-        if user_id is not None:
-            existing_questions = await QuestionRepository.get_unseen_questions(
-                db_session,
-                user_id,
-                language,
-                topic,
-                difficulty,
-                limit=count,
-            )
-        else:
-            existing_questions = await QuestionRepository.get_questions_by_filters(
-                db_session,
-                language,
-                topic,
-                difficulty,
-                limit=count,
-            )
-
-        # Convert to Question models
-        questions = [
-            QuestionRepository.question_db_to_model(q) for q in existing_questions
+        # Distribute count across topics (evenly, remainder from start)
+        topics_count = len(topics)
+        base_count = count // topics_count
+        remainder = count % topics_count
+        topic_counts = [
+            base_count + 1 if i < remainder else base_count for i in range(topics_count)
         ]
 
-        # Generate missing questions if needed
-        missing_count = count - len(questions)
-        if missing_count > 0:
-            logger.info(
-                "generating missing questions",
-                missing_count=missing_count,
-            )
-            for _ in range(missing_count):
-                request = GenerateQuestionRequest(
-                    language=language,
-                    topic=topic,
-                    difficulty=difficulty,
-                    question_type=question_type,
-                )
-                # Generate question with db_session to save it
-                question = await self.generate_question(request, db_session=db_session)
-                questions.append(question)
+        all_questions: list[Question] = []
 
-        # Take only requested count (in case we generated more)
-        questions = questions[:count]
+        # Process each topic
+        for topic, topic_count in zip(topics, topic_counts):
+            try:
+                # Get existing questions for this topic
+                if user_id is not None:
+                    existing_questions = await QuestionRepository.get_unseen_questions(
+                        db_session,
+                        user_id,
+                        language,
+                        topic,
+                        difficulty,
+                        limit=topic_count,
+                    )
+                else:
+                    existing_questions = (
+                        await QuestionRepository.get_questions_by_filters(
+                            db_session,
+                            language,
+                            topic,
+                            difficulty,
+                            limit=topic_count,
+                        )
+                    )
+
+                # Convert to Question models
+                topic_questions = [
+                    QuestionRepository.question_db_to_model(q)
+                    for q in existing_questions
+                ]
+
+                # Generate missing questions if needed
+                missing_count = topic_count - len(topic_questions)
+                if missing_count > 0:
+                    logger.info(
+                        "generating missing questions for topic",
+                        topic=topic,
+                        missing_count=missing_count,
+                    )
+                    for _ in range(missing_count):
+                        request = GenerateQuestionRequest(
+                            language=language,
+                            topic=topic,
+                            difficulty=difficulty,
+                            question_type=question_type,
+                        )
+                        # Generate question with db_session to save it
+                        question = await self.generate_question(
+                            request, db_session=db_session
+                        )
+                        topic_questions.append(question)
+
+                # Take only requested count for this topic
+                topic_questions = topic_questions[:topic_count]
+                all_questions.extend(topic_questions)
+
+            except Exception as e:
+                logger.warning(
+                    "failed to get questions for topic",
+                    topic=topic,
+                    error=str(e),
+                )
+                # Continue with other topics even if one fails
+
+        # Shuffle final list
+        random.shuffle(all_questions)
+
+        # Take only requested count (in case we got more)
+        all_questions = all_questions[:count]
 
         # Mark questions as seen if user provided
-        if user_id is not None and questions:
-            question_ids = [uuid.UUID(q.id) for q in questions]
+        if user_id is not None and all_questions:
+            question_ids = [uuid.UUID(q.id) for q in all_questions]
             await QuestionRepository.mark_questions_as_seen(
                 db_session, user_id, question_ids
             )
 
         logger.info(
             "questions batch retrieved",
-            count=len(questions),
+            count=len(all_questions),
             telegram_user_id=telegram_user_id,
         )
 
-        return questions
+        return all_questions

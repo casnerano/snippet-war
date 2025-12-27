@@ -35,7 +35,7 @@ class GetQuestionsBatchRequest(BaseModel):
     """Request model for getting batch of questions."""
 
     language: Language
-    topic: str
+    topics: list[str] = Field(..., min_length=1, description="List of topics")
     difficulty: Difficulty
     count: int = Field(..., ge=1, description="Number of questions")
     question_type: QuestionType = Field(
@@ -46,12 +46,13 @@ class GetQuestionsBatchRequest(BaseModel):
     )
 
     @model_validator(mode="after")
-    def validate_topic(self) -> "GetQuestionsBatchRequest":
-        """Validate that topic is valid for the given language."""
-        if not is_valid_topic(self.language, self.topic):
-            raise ValueError(
-                f"invalid topic '{self.topic}' for language '{self.language.value}'"
-            )
+    def validate_topics(self) -> "GetQuestionsBatchRequest":
+        """Validate that all topics are valid for the given language."""
+        for topic in self.topics:
+            if not is_valid_topic(self.language, topic):
+                raise ValueError(
+                    f"invalid topic '{topic}' for language '{self.language.value}'"
+                )
         return self
 
 
