@@ -3,10 +3,9 @@
 from app.clients import ProxyAPIClient
 from app.database import get_db_session
 from app.exceptions import BusinessLogicError, ValidationError
-from app.models import GenerateQuestionRequest, Question
-from app.models.enums import Difficulty, Language, QuestionType
+from app.models import GenerateQuestionRequest, GetQuestionsBatchRequest, Question
 from app.services import QuestionService
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -63,22 +62,13 @@ async def generate_question(
         ) from e
 
 
-@router.get(
+@router.post(
     "/batch",
     response_model=list[Question],
     status_code=status.HTTP_200_OK,
 )
 async def get_questions_batch(
-    language: Language = Query(..., description="Programming language"),
-    topic: str = Query(..., description="Topic"),
-    difficulty: Difficulty = Query(..., description="Difficulty level"),
-    count: int = Query(..., ge=1, description="Number of questions"),
-    question_type: QuestionType = Query(
-        QuestionType.MULTIPLE_CHOICE, description="Question type"
-    ),
-    telegram_user_id: int | None = Query(
-        None, description="Telegram user ID (optional)"
-    ),
+    request: GetQuestionsBatchRequest,
     service: QuestionService = Depends(get_question_service),
     db: AsyncSession = Depends(get_db_session),
 ) -> list[Question]:
@@ -86,12 +76,7 @@ async def get_questions_batch(
     Get batch of questions, generating missing ones if needed.
 
     Args:
-        language: Programming language
-        topic: Topic
-        difficulty: Difficulty level
-        count: Number of questions to return
-        question_type: Question type
-        telegram_user_id: Optional Telegram user ID
+        request: Batch request parameters
         service: Question service dependency
         db: Database session
 
@@ -104,12 +89,12 @@ async def get_questions_batch(
     try:
         return await service.get_questions_batch(
             db_session=db,
-            language=language,
-            topic=topic,
-            difficulty=difficulty,
-            count=count,
-            question_type=question_type,
-            telegram_user_id=telegram_user_id,
+            language=request.language,
+            topic=request.topic,
+            difficulty=request.difficulty,
+            count=request.count,
+            question_type=request.question_type,
+            telegram_user_id=request.telegram_user_id,
         )
     except ValidationError as e:
         raise HTTPException(
