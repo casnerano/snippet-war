@@ -1,19 +1,29 @@
-FROM python:3.13-slim
+# Build stage
+FROM golang:1.25-alpine AS builder
+
+WORKDIR /build
+
+# Copy go mod files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -o snippet-war ./cmd/snippet-war
+
+# Runtime stage
+FROM alpine:latest
 
 WORKDIR /app
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+# Install ca-certificates for HTTPS requests
+RUN apk --no-cache add ca-certificates
 
-# Copy project files
-COPY pyproject.toml ./
-
-# Install dependencies
-RUN uv sync
-
-# Copy application code
-COPY ./app ./app
+# Copy binary from builder
+COPY --from=builder /build/snippet-war .
 
 EXPOSE 8081
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8081"]
+CMD ["./snippet-war"]
