@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.clients import ProxyAPIClient
 from app.config import load_config
+from app.database import Database
 from app.exceptions import BusinessLogicError
 from app.routers import questions_router
 from fastapi import FastAPI, Request, status
@@ -42,9 +43,27 @@ async def lifespan(app: FastAPI):
     llm_client = ProxyAPIClient(config.proxyapi)
     app.state.proxyapi_client = llm_client
 
+    # Initialize database connection and store in app state
+    try:
+        database = Database(config.database)
+        await database.init()
+        app.state.database = database
+        logger.info("Database connection initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
+
     logger.info("Application started successfully")
 
     yield
+
+    # Close database connection
+    try:
+        db: Database = app.state.database
+        await db.close()
+        logger.info("Database connection closed")
+    except Exception as e:
+        logger.error(f"Error closing database connection: {e}")
 
     # Close the client on shutdown
     await llm_client.close()
