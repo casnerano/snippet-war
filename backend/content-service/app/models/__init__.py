@@ -1,7 +1,7 @@
 """Pydantic models for question generation."""
 
 from app.models.enums import Difficulty, Language, QuestionType
-from app.models.llm_response import LLMQuestionResponse
+from app.models.llm_response import LLMQuestionResponse, LLMQuestionsResponse
 from app.models.question import (
     GenerateQuestionRequest,
     GetQuestionsBatchRequest,
@@ -18,5 +18,6 @@ __all__ = [
     "GetQuestionsBatchRequest",
     "Question",
     "LLMQuestionResponse",
+    "LLMQuestionsResponse",
     "get_topics_for_language",
 ]

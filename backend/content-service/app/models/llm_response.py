@@ -31,9 +31,8 @@ class LLMQuestionResponse(BaseModel):
     @field_validator("code")
     @classmethod
     def validate_code(cls, v: str) -> str:
-        """Validate code is not empty."""
-        if not v:
-            raise ValueError("code is required")
+        """Validate code field exists (can be empty string)."""
+        # Code can be empty string for theoretical questions without code
         return v
 
     @field_validator("question")
@@ -88,3 +87,23 @@ class LLMQuestionResponse(BaseModel):
         )
 
         return question
+
+
+class LLMQuestionsResponse(BaseModel):
+    """Response model from LLM for multiple questions generation."""
+
+    questions: list[LLMQuestionResponse]
+
+    @field_validator("questions")
+    @classmethod
+    def validate_questions(
+        cls, v: list[LLMQuestionResponse]
+    ) -> list[LLMQuestionResponse]:
+        """Validate questions list is not empty."""
+        if not v or len(v) == 0:
+            raise ValueError("questions list must not be empty")
+        return v
+
+    def to_questions(self) -> list["Question"]:
+        """Convert LLM response to list of Question models."""
+        return [q.to_question() for q in self.questions]

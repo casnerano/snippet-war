@@ -74,9 +74,8 @@ class Question(BaseModel):
     @field_validator("code")
     @classmethod
     def validate_code(cls, v: str) -> str:
-        """Validate code is not empty."""
-        if not v:
-            raise ValueError("code is required")
+        """Validate code field exists (can be empty string)."""
+        # Code can be empty string for theoretical questions without code
         return v
 
     @field_validator("question_text")

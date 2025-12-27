@@ -1,10 +1,14 @@
 """ProxyAPI client for LLM question generation."""
 
 import json
+from typing import TypeVar
 
 from app.config import ProxyAPIConfig
-from app.models.llm_response import LLMQuestionResponse
+from app.models.llm_response import LLMQuestionResponse, LLMQuestionsResponse
 from openai import APIError, APITimeoutError, AsyncOpenAI, RateLimitError
+from pydantic import BaseModel
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class ProxyAPIClient:
@@ -21,21 +25,22 @@ class ProxyAPIClient:
         self.model = config.model
         self.max_tokens = config.max_tokens
 
-    async def generate_question(self, prompt: str) -> LLMQuestionResponse:
+    async def _generate_response(
+        self, prompt: str, response_model: type[T], error_context: str
+    ) -> T:
         """
-        Generate question response from ProxyAPI.
+        Generate response from ProxyAPI and validate it.
 
         Args:
             prompt: Prompt text for LLM
+            response_model: Pydantic model class for response validation
+            error_context: Context string for error messages
 
         Returns:
-            LLMQuestionResponse with generated question data
+            Validated response model instance
 
         Raises:
-            APIError: If API request fails
-            RateLimitError: If rate limit is exceeded
-            APITimeoutError: If request times out
-            ValueError: If response cannot be parsed
+            ValueError: If API request fails or response cannot be parsed
         """
         try:
             response = await self.client.chat.completions.create(
@@ -52,10 +57,9 @@ class ProxyAPIClient:
             if not content:
                 raise ValueError("empty response from API: no text content in response")
 
-            # Parse JSON response into LLMQuestionResponse
             try:
                 json_data = json.loads(content)
-                return LLMQuestionResponse.model_validate(json_data)
+                return response_model.model_validate(json_data)
             except json.JSONDecodeError as e:
                 raise ValueError(f"failed to parse JSON response: {e}") from e
             except Exception as e:
@@ -76,7 +80,41 @@ class ProxyAPIClient:
             else:
                 raise ValueError(f"API error (status {status_code}): {e}") from e
         except Exception as e:
-            raise ValueError(f"failed to generate question: {e}") from e
+            raise ValueError(f"failed to {error_context}: {e}") from e
+
+    async def generate_question(self, prompt: str) -> LLMQuestionResponse:
+        """
+        Generate question response from ProxyAPI.
+
+        Args:
+            prompt: Prompt text for LLM
+
+        Returns:
+            LLMQuestionResponse with generated question data
+
+        Raises:
+            ValueError: If API request fails or response cannot be parsed
+        """
+        return await self._generate_response(
+            prompt, LLMQuestionResponse, "generate question"
+        )
+
+    async def generate_questions(self, prompt: str) -> LLMQuestionsResponse:
+        """
+        Generate multiple questions response from ProxyAPI.
+
+        Args:
+            prompt: Prompt text for LLM
+
+        Returns:
+            LLMQuestionsResponse with generated questions data
+
+        Raises:
+            ValueError: If API request fails or response cannot be parsed
+        """
+        return await self._generate_response(
+            prompt, LLMQuestionsResponse, "generate questions"
+        )
 
     async def close(self) -> None:
         """Close the underlying AsyncOpenAI client."""
