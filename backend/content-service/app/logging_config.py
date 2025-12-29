@@ -94,4 +94,3 @@ def setup_logging(
             log_level=log_level,
             json_format=enable_json,
         )
-
