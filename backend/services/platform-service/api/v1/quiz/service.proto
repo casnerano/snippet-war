@@ -1,19 +1,28 @@
 syntax = "proto3";
 
-package example;
+package quiz;
 
 option go_package = "github.com/casnerano/snippet-war/pkg/api/v1/quiz;quiz";
 
-import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
 service Quiz {
-  rpc GetQuestions(GetQuestions.Request) returns (GetQuestions.Response);
+  rpc ListQuestions(ListQuestions.Request) returns (ListQuestions.Response) {
+    option (google.api.http) = {
+      get: "/v1/quiz/questions",
+    };
+  };
 }
 
-message GetQuestions {
+message ListQuestions {
   message Request {
+    Language language = 1;
+    repeated string topics = 2;
+    Difficulty difficulty = 3;
+    uint32 limit = 4;
   }
+
   message Response {
     repeated Question questions = 1;
   }
