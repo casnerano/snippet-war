@@ -1,11 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: snippet-war-postgres
+    container_name: postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-snippet_war}
-      POSTGRES_USER: ${POSTGRES_USER:-snippet_war}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-snippet_war}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -25,12 +25,13 @@ services:
       - PGADMIN_DEFAULT_EMAIL=${POSTGRES_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - '9090:80'
+      - "9090:80"
     networks:
       - internal
 
   migrate:
     image: migrate/migrate:latest
+    container_name: migrate
     volumes:
       - ./backend/migrations:/migrations
     command:
@@ -45,6 +46,7 @@ services:
 
   platform-service:
     build: backend/services/platform-service
+    container_name: platform-service
     ports:
       - "8081:8081"
     env_file:
@@ -57,6 +59,7 @@ services:
 
   content-service:
     build: backend/services/content-service
+    container_name: content-service
     ports:
       - "8082:8081"
     env_file:

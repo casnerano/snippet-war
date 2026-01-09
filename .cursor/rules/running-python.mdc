@@ -1,5 +1,0 @@
----
-alwaysApply: true
----
-
-Когда хочешь запустить какой-то скрипт python (.py, alembic, pytest, ...), всегда используй uv
