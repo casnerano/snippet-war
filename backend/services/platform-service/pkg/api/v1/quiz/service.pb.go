@@ -7,12 +7,13 @@
 package quiz
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -230,13 +231,13 @@ type Question struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id                string                    `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Language          Language                  `protobuf:"varint,2,opt,name=language,proto3,enum=example.Language" json:"language,omitempty"`
-	Topics            []string                  `protobuf:"bytes,3,rep,name=topics,proto3" json:"topics,omitempty"`
-	Difficulty        Difficulty                `protobuf:"varint,4,opt,name=difficulty,proto3,enum=example.Difficulty" json:"difficulty,omitempty"`
-	QuestionType      QuestionType              `protobuf:"varint,5,opt,name=question_type,json=questionType,proto3,enum=example.QuestionType" json:"question_type,omitempty"`
-	Preview           *Question_QuestionPreview `protobuf:"bytes,6,opt,name=preview,proto3" json:"preview,omitempty"`
-	Explanation       string                    `protobuf:"bytes,8,opt,name=explanation,proto3" json:"explanation,omitempty"`
+	Id           string                    `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Language     Language                  `protobuf:"varint,2,opt,name=language,proto3,enum=example.Language" json:"language,omitempty"`
+	Topics       []string                  `protobuf:"bytes,3,rep,name=topics,proto3" json:"topics,omitempty"`
+	Difficulty   Difficulty                `protobuf:"varint,4,opt,name=difficulty,proto3,enum=example.Difficulty" json:"difficulty,omitempty"`
+	QuestionType QuestionType              `protobuf:"varint,5,opt,name=question_type,json=questionType,proto3,enum=example.QuestionType" json:"question_type,omitempty"`
+	Preview      *Question_QuestionPreview `protobuf:"bytes,6,opt,name=preview,proto3" json:"preview,omitempty"`
+	Explanation  string                    `protobuf:"bytes,8,opt,name=explanation,proto3" json:"explanation,omitempty"`
 	Options           []string                  `protobuf:"bytes,9,rep,name=options,proto3" json:"options,omitempty"`
 	CorrectOptions    []string                  `protobuf:"bytes,10,rep,name=correct_options,json=correctOptions,proto3" json:"correct_options,omitempty"`
 	AcceptableVariant *string                   `protobuf:"bytes,11,opt,name=acceptable_variant,json=acceptableVariant,proto3,oneof" json:"acceptable_variant,omitempty"`

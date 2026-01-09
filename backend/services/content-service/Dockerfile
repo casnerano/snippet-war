@@ -12,7 +12,7 @@ COPY pyproject.toml ./
 RUN uv sync
 
 # Copy application code
-COPY ./app ./app
+COPY app ./app
 
 EXPOSE 8081
 

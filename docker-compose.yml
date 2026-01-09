@@ -44,7 +44,7 @@ services:
       - internal
 
   platform-service:
-    build: backend/platform-service
+    build: backend/services/platform-service
     ports:
       - "8081:8081"
     env_file:
@@ -56,7 +56,7 @@ services:
       - internal
 
   content-service:
-    build: backend/content-service
+    build: backend/services/content-service
     ports:
       - "8082:8081"
     env_file:
