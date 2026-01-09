@@ -25,7 +25,7 @@ This service generates programming questions using Large Language Models (LLM). 
 
 1. Install dependencies:
 ```bash
-cd backend/platform-service
+cd backend/services/platform-service
 uv sync
 ```
 
