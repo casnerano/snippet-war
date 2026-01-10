@@ -5,11 +5,13 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/casnerano/snippet-war/internal/service/quiz"
-	desc "github.com/casnerano/snippet-war/pkg/api/v1/quiz"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
+
+type serviceRegistrar interface {
+	Register(server *grpc.Server)
+}
 
 type Server struct {
 	listener net.Listener
@@ -24,12 +26,8 @@ func New(addr string) (*Server, error) {
 
 	server := Server{
 		listener: listener,
+		grpc:     grpc.NewServer(),
 	}
-
-	server.grpc = grpc.NewServer()
-
-	reflection.Register(server.grpc)
-	desc.RegisterQuizServer(server.grpc, &quiz.Quiz{})
 
 	return &server, nil
 }
@@ -38,10 +36,17 @@ func (s *Server) Run(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
 		slog.Info("Shutting down server...")
-		
+
 		s.grpc.GracefulStop()
 		_ = s.listener.Close()
 	}()
 
 	return s.grpc.Serve(s.listener)
+}
+
+func (s *Server) RegisterServices(services ...serviceRegistrar) {
+	for _, service := range services {
+		service.Register(s.grpc)
+	}
+	reflection.Register(s.grpc)
 }

@@ -188,7 +188,7 @@
         "difficulty": {
           "$ref": "#/definitions/quizDifficulty"
         },
-        "context": {
+        "content": {
           "$ref": "#/definitions/QuestionContent"
         },
         "explanation": {

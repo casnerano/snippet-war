@@ -166,11 +166,11 @@ func (m *Question) validate(all bool) error {
 	// no validation rules for Difficulty
 
 	if all {
-		switch v := interface{}(m.GetContext()).(type) {
+		switch v := interface{}(m.GetContent()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, QuestionValidationError{
-					field:  "Context",
+					field:  "Content",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -178,16 +178,16 @@ func (m *Question) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, QuestionValidationError{
-					field:  "Context",
+					field:  "Content",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetContext()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetContent()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return QuestionValidationError{
-				field:  "Context",
+				field:  "Content",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

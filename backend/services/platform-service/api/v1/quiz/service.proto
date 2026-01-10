@@ -34,7 +34,7 @@ message Question {
   Language language = 2;
   string topic = 3;
   Difficulty difficulty = 4;
-  Content context = 5;
+  Content content = 5;
   string explanation = 6;
 
   oneof Answer {
