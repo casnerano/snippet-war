@@ -17,7 +17,6 @@ type Server struct {
 }
 
 func New(addr string) (*Server, error) {
-
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -39,7 +38,9 @@ func (s *Server) Run(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
 		slog.Info("Shutting down server...")
+		
 		s.grpc.GracefulStop()
+		_ = s.listener.Close()
 	}()
 
 	return s.grpc.Serve(s.listener)
