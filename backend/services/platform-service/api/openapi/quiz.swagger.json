@@ -1,0 +1,225 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/v1/quiz/service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Quiz"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/quiz/questions": {
+      "get": {
+        "operationId": "Quiz_ListQuestions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ListQuestionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "LANGUAGE_UNSPECIFIED",
+              "LANGUAGE_PYTHON",
+              "LANGUAGE_JAVASCRIPT",
+              "LANGUAGE_GO",
+              "LANGUAGE_JAVA",
+              "LANGUAGE_CPP",
+              "LANGUAGE_RUST",
+              "LANGUAGE_TYPESCRIPT"
+            ],
+            "default": "LANGUAGE_UNSPECIFIED"
+          },
+          {
+            "name": "topics",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "difficulty",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "DIFFICULTY_UNSPECIFIED",
+              "DIFFICULTY_BEGINNER",
+              "DIFFICULTY_INTERMEDIATE",
+              "DIFFICULTY_ADVANCED"
+            ],
+            "default": "DIFFICULTY_UNSPECIFIED"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Quiz"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ListQuestionsResponse": {
+      "type": "object",
+      "properties": {
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/quizQuestion"
+          }
+        }
+      }
+    },
+    "QuestionContent": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        }
+      }
+    },
+    "QuestionFreeTextAnswer": {
+      "type": "object",
+      "properties": {
+        "correctAnswers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "QuestionMultipleChoiceAnswer": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "correctOptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "quizDifficulty": {
+      "type": "string",
+      "enum": [
+        "DIFFICULTY_UNSPECIFIED",
+        "DIFFICULTY_BEGINNER",
+        "DIFFICULTY_INTERMEDIATE",
+        "DIFFICULTY_ADVANCED"
+      ],
+      "default": "DIFFICULTY_UNSPECIFIED"
+    },
+    "quizLanguage": {
+      "type": "string",
+      "enum": [
+        "LANGUAGE_UNSPECIFIED",
+        "LANGUAGE_PYTHON",
+        "LANGUAGE_JAVASCRIPT",
+        "LANGUAGE_GO",
+        "LANGUAGE_JAVA",
+        "LANGUAGE_CPP",
+        "LANGUAGE_RUST",
+        "LANGUAGE_TYPESCRIPT"
+      ],
+      "default": "LANGUAGE_UNSPECIFIED"
+    },
+    "quizQuestion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "language": {
+          "$ref": "#/definitions/quizLanguage"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "difficulty": {
+          "$ref": "#/definitions/quizDifficulty"
+        },
+        "content": {
+          "$ref": "#/definitions/QuestionContent"
+        },
+        "explanation": {
+          "type": "string"
+        },
+        "multipleChoice": {
+          "$ref": "#/definitions/QuestionMultipleChoiceAnswer"
+        },
+        "freeText": {
+          "$ref": "#/definitions/QuestionFreeTextAnswer"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
