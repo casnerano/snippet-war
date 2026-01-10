@@ -3,11 +3,11 @@ VENDOR_PROTO_PATH := $(CURDIR)/vendor.protogen
 
 .PHONY: download-bin-deps
 download-bin-deps:
-	ls $(LOCAL_BIN)/buf &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/bufbuild/buf/cmd/buf@latest
-	ls $(LOCAL_BIN)/protoc-gen-go &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
-	ls $(LOCAL_BIN)/protoc-gen-go-grpc &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
-	ls $(LOCAL_BIN)/protoc-gen-grpc-gateway &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.18.1
-	ls $(LOCAL_BIN)/protoc-gen-openapiv2 &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.18.1
+	ls $(LOCAL_BIN)/protoc-gen-go &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	ls $(LOCAL_BIN)/protoc-gen-go-grpc &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	ls $(LOCAL_BIN)/protoc-gen-grpc-gateway &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+	ls $(LOCAL_BIN)/protoc-gen-openapiv2 &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
+	ls $(LOCAL_BIN)/protoc-gen-validate &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/envoyproxy/protoc-gen-validate@latest
 
 .PHONY: vendor-proto/google/api
 vendor-proto/google/api:
@@ -75,6 +75,9 @@ generate-proto:
 	  --openapiv2_opt=allow_merge=true \
 	  --openapiv2_opt=merge_file_name=quiz \
 	  \
+	  --plugin=protoc-gen-validate=$(LOCAL_BIN)/protoc-gen-validate \
+	  --validate_out="lang=go,paths=source_relative:./pkg" \
+      \
 	  ./api/v1/quiz/service.proto
 
 .PHONY: generate

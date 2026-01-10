@@ -101,7 +101,7 @@
         }
       }
     },
-    "QuestionQuestionPreview": {
+    "QuestionContent": {
       "type": "object",
       "properties": {
         "text": {
@@ -109,6 +109,34 @@
         },
         "code": {
           "type": "string"
+        }
+      }
+    },
+    "QuestionFreeTextAnswer": {
+      "type": "object",
+      "properties": {
+        "correctAnswers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "QuestionMultipleChoiceAnswer": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "correctOptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -154,53 +182,25 @@
         "language": {
           "$ref": "#/definitions/quizLanguage"
         },
-        "topics": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "topic": {
+          "type": "string"
         },
         "difficulty": {
           "$ref": "#/definitions/quizDifficulty"
         },
-        "questionType": {
-          "$ref": "#/definitions/quizQuestionType"
-        },
-        "preview": {
-          "$ref": "#/definitions/QuestionQuestionPreview"
+        "context": {
+          "$ref": "#/definitions/QuestionContent"
         },
         "explanation": {
           "type": "string"
         },
-        "options": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "multipleChoice": {
+          "$ref": "#/definitions/QuestionMultipleChoiceAnswer"
         },
-        "correctOptions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "acceptableVariant": {
-          "type": "string"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
+        "freeText": {
+          "$ref": "#/definitions/QuestionFreeTextAnswer"
         }
       }
-    },
-    "quizQuestionType": {
-      "type": "string",
-      "enum": [
-        "QUESTION_TYPE_UNSPECIFIED",
-        "QUESTION_TYPE_MULTIPLE_CHOICE",
-        "QUESTION_TYPE_FREE_TEXT"
-      ],
-      "default": "QUESTION_TYPE_UNSPECIFIED"
     },
     "rpcStatus": {
       "type": "object",

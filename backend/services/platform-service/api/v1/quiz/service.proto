@@ -6,6 +6,7 @@ option go_package = "github.com/casnerano/snippet-war/pkg/api/v1/quiz;quiz";
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
 
 service Quiz {
   rpc ListQuestions(ListQuestions.Request) returns (ListQuestions.Response) {
@@ -17,10 +18,10 @@ service Quiz {
 
 message ListQuestions {
   message Request {
-    Language language = 1;
-    repeated string topics = 2;
-    Difficulty difficulty = 3;
-    uint32 limit = 4;
+    Language language = 1 [(validate.rules).enum = {not_in: [0]}, (validate.rules).enum.defined_only = true];
+    repeated string topics = 2 [(validate.rules).repeated.min_items = 1];
+    Difficulty difficulty = 3 [(validate.rules).enum = {not_in: [0]}, (validate.rules).enum.defined_only = true];
+    uint32 limit = 4 [(validate.rules).uint32 = {gt: 0, lt: 10}];
   }
 
   message Response {
@@ -31,23 +32,28 @@ message ListQuestions {
 message Question {
   string id = 1;
   Language language = 2;
-  repeated string topics = 3;
+  string topic = 3;
   Difficulty difficulty = 4;
-  QuestionType question_type = 5;
+  Content context = 5;
+  string explanation = 6;
 
-  QuestionPreview preview = 6;
-  string explanation = 8;
+  oneof Answer {
+    MultipleChoiceAnswer multiple_choice = 7;
+    FreeTextAnswer free_text = 8;
+  }
 
-  repeated string options = 9;
-
-  repeated string correct_options = 10;
-  optional string acceptable_variant = 11;
-
-  google.protobuf.Timestamp created_at = 12;
-
-  message QuestionPreview {
-    optional string text = 1;
+  message Content {
+    string text = 1;
     optional string code = 2;
+  }
+
+  message MultipleChoiceAnswer {
+    repeated string options = 1;
+    repeated string correct_options = 4;
+  }
+
+  message FreeTextAnswer {
+    repeated string correct_answers = 1;
   }
 }
 
@@ -67,10 +73,4 @@ enum Difficulty {
   DIFFICULTY_BEGINNER = 1;
   DIFFICULTY_INTERMEDIATE = 2;
   DIFFICULTY_ADVANCED = 3;
-}
-
-enum QuestionType {
-  QUESTION_TYPE_UNSPECIFIED = 0;
-  QUESTION_TYPE_MULTIPLE_CHOICE = 1;
-  QUESTION_TYPE_FREE_TEXT = 2;
 }
