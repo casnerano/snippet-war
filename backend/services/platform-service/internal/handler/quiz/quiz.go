@@ -1,13 +1,12 @@
-package server
+package quiz
 
 import (
 	"context"
 	"log/slog"
 
-	quiz_models "github.com/casnerano/snippet-war/internal/models/quiz"
-	quiz_service "github.com/casnerano/snippet-war/internal/services/quiz"
+	quiz_models "github.com/casnerano/snippet-war/internal/model/quiz"
+	quiz_service "github.com/casnerano/snippet-war/internal/service/quiz"
 	desc "github.com/casnerano/snippet-war/pkg/api/v1/quiz"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -51,8 +50,4 @@ func (q *Quiz) ListQuestions(ctx context.Context, request *desc.ListQuestions_Re
 	}
 
 	return &response, nil
-}
-
-func (q *Quiz) Register(server *grpc.Server) {
-	desc.RegisterQuizServer(server, q)
 }

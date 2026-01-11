@@ -1,0 +1,16 @@
+{
+  "server": {
+    "grpc": {
+      "addr": "127.0.0.1:7071"
+    },
+    "http": {
+      "addr": "127.0.0.1:8088"
+    }
+  },
+  "content_service": {
+    "addr": "http://127.0.0.1:8082"
+  },
+  "logging": {
+    "level": "info"
+  }
+}

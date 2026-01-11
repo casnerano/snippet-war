@@ -3,12 +3,12 @@ package quiz
 import (
 	"context"
 
-	"github.com/casnerano/snippet-war/internal/clients/content_service"
-	models "github.com/casnerano/snippet-war/internal/models/quiz"
+	"github.com/casnerano/snippet-war/internal/client/content_service"
+	models "github.com/casnerano/snippet-war/internal/model/quiz"
 )
 
 type contentProvider interface {
-	GetQuestions(ctx context.Context, args content_service.GetQuestionsArgs) ([]*models.Question, error)
+	GetQuestions(ctx context.Context, tgUserID string, args content_service.GetQuestionsArgs) ([]*models.Question, error)
 }
 
 type Quiz struct {
@@ -29,7 +29,9 @@ type GetQuestionsArgs struct {
 }
 
 func (q *Quiz) GetQuestions(ctx context.Context, args GetQuestionsArgs) ([]*models.Question, error) {
-	return q.contentProvider.GetQuestions(ctx, content_service.GetQuestionsArgs{
+	tgUserID := "1"
+
+	return q.contentProvider.GetQuestions(ctx, tgUserID, content_service.GetQuestionsArgs{
 		Language:   args.Language,
 		Topics:     args.Topics,
 		Difficulty: args.Difficulty,

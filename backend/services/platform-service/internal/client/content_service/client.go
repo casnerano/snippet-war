@@ -8,21 +8,18 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/casnerano/snippet-war/internal/config"
-	models "github.com/casnerano/snippet-war/internal/models/quiz"
+	models "github.com/casnerano/snippet-war/internal/model/quiz"
 )
 
-type ContentService struct {
+type Client struct {
 	baseURL    string
 	httpClient *http.Client
 }
 
-func New(_ context.Context) *ContentService {
-	cfg := config.GetContentServiceConfig()
-
-	return &ContentService{
+func New(_ context.Context, host string) *Client {
+	return &Client{
 		httpClient: &http.Client{},
-		baseURL:    cfg.Host,
+		baseURL:    host,
 	}
 }
 
@@ -33,17 +30,21 @@ type GetQuestionsArgs struct {
 	Limit      uint32
 }
 
-func (s *ContentService) GetQuestions(ctx context.Context, args GetQuestionsArgs) ([]*models.Question, error) {
+func (s *Client) GetQuestions(ctx context.Context, tgUserID string, args GetQuestionsArgs) ([]*models.Question, error) {
 	payload := struct {
-		Language   models.Language   `json:"language"`
-		Topics     []string          `json:"topics"`
-		Difficulty models.Difficulty `json:"difficulty"`
-		Count      uint32            `json:"count"`
+		Language     models.Language   `json:"language"`
+		Topics       []string          `json:"topics"`
+		Difficulty   models.Difficulty `json:"difficulty"`
+		Count        uint32            `json:"count"`
+		QuestionType models.AnswerType `json:"question_type"`
+		TgUserID     string            `json:"telegram_user_id"`
 	}{
-		Language:   args.Language,
-		Topics:     args.Topics,
-		Difficulty: args.Difficulty,
-		Count:      args.Limit,
+		Language:     args.Language,
+		Topics:       args.Topics,
+		Difficulty:   args.Difficulty,
+		Count:        args.Limit,
+		QuestionType: models.AnswerTypeMultipleChoice,
+		TgUserID:     tgUserID,
 	}
 
 	bPayload, err := json.Marshal(payload)

@@ -1,7 +1,7 @@
-package server
+package quiz
 
 import (
-	models "github.com/casnerano/snippet-war/internal/models/quiz"
+	models "github.com/casnerano/snippet-war/internal/model/quiz"
 	desc "github.com/casnerano/snippet-war/pkg/api/v1/quiz"
 )
 
